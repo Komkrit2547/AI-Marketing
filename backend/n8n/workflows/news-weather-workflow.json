@@ -1,0 +1,79 @@
+{
+  "name": "AI Marketing - News & Weather to Insights",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "cron-trigger",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.cronTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://newsapi.org/v2/everything",
+        "options": {}
+      },
+      "id": "fetch-news",
+      "name": "Fetch Local News",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openweathermap.org/data/2.5/weather",
+        "options": {}
+      },
+      "id": "fetch-weather",
+      "name": "Fetch Weather Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 450]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "={{ $json[\"combined\"] }}"
+            }
+          ]
+        }
+      },
+      "id": "openai-generate",
+      "name": "Generate AI Insights",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "collection": "AIInsight",
+        "operations": [
+          {
+            "operation": "insert"
+          }
+        ]
+      },
+      "id": "save-to-mongo",
+      "name": "Save to MongoDB",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [[{ "node": "Fetch Local News", "type": "main" }]]
+    },
+    "Fetch Local News": {
+      "main": [[{ "node": "Generate AI Insights", "type": "main" }]]
+    },
+    "Generate AI Insights": {
+      "main": [[{ "node": "Save to MongoDB", "type": "main" }]]
+    }
+  }
+}
