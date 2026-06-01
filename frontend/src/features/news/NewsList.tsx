@@ -101,7 +101,7 @@ export default function NewsList() {
           <div className="h-[260px] bg-[#F4F0E3] rounded-2xl" />
         </div>
 
-        <useNews />
+
       </div>
 
       {/* News */}
