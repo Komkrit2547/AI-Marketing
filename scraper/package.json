@@ -1,0 +1,34 @@
+{
+  "name": "facebook-scraper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prisma:generate": "prisma generate --schema=../prisma/schema.prisma",
+    "prisma:push": "prisma db push --schema=../prisma/schema.prisma",
+    "start": "ts-node src/index.ts",
+    "init-login": "ts-node src/index.ts --init-login",
+    "test-scrape": "ts-node src/test-scrape.ts",
+    "validate": "ts-node src/validate-data.ts",
+    "clear-data": "ts-node src/clear-data.ts",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "dotenv": "^17.4.2",
+    "node-cron": "^4.2.1",
+    "playwright": "^1.60.0",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "@types/node-cron": "^3.0.11",
+    "prisma": "^5.22.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model News {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  content     String?
+  source      String
+  url         String?
+  category    String?
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model AIInsight {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  summary         String
+  recommendation  String?
+  category        String?
+  relatedNewsId   String?  @db.ObjectId
+  createdAt       DateTime @default(now())
+}
+
+model Campaign {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  caption     String?
+  couponText  String?
+  status      String   @default("draft")
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CommunityPost {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  source          String   @default("facebook")
+  groupId         String
+  groupName       String
+  postId          String?
+  postUrl         String?
+  content         String
+  contentPreview  String?
+  contentFull     String?
+  contentLength   Int      @default(0)
+  isTruncated     Boolean  @default(false)
+  reactionCount   Int      @default(0)
+  commentCount    Int      @default(0)
+  shareCount      Int      @default(0)
+  postedAt        DateTime?
+  scrapedAt       DateTime @default(now())
+  contentHash     String   @unique
+  isProcessed     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("community_posts")
+}
+
+model ScraperLog {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  status        String
+  postsFound    Int
+  postsInserted Int
+  timestamp     DateTime @default(now())
+
+  @@map("scraper_logs")
+}
+
+model WeatherRecord {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  district    String
+  province    String
+
+  weather     String?
+  temperature Float?
+  humidity    Float?
+  rainfall    Float?
+  windSpeed   Float?
+
+  source      String?
+
+  recordedAt  DateTime
+  createdAt   DateTime @default(now())
+}

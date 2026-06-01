@@ -17,7 +17,9 @@ services:
       - app-network
 
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     ports:
       - "4000:4000"
     environment:
@@ -37,6 +39,13 @@ services:
     volumes:
       - mongodb_data:/data/db
       - ./backend/database/init.js:/docker-entrypoint-initdb.d/init.js
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    healthcheck:
+      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}) }" | mongosh --quiet
+      interval: 5s
+      timeout: 30s
+      start_period: 0s
+      retries: 30
     networks:
       - app-network
 
@@ -49,7 +58,7 @@ services:
       - N8N_HOST=http://localhost:5678
     volumes:
       - n8n_data:/home/node/.n8n
-      - ./backend/n8n/workflows:/home/node/.n8n/workflows
+      - ./n8n/workflows:/home/node/.n8n/workflows
     entrypoint: ["tini", "--", "/bin/sh", "-c"]
     command: ["n8n import:workflow --separate --input=/home/node/.n8n/workflows || true && n8n"]
     depends_on:
@@ -58,7 +67,9 @@ services:
       - app-network
 
   prisma-studio:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     ports:
       - "5555:5555"
     environment:
@@ -66,6 +77,20 @@ services:
     command: npx prisma studio --hostname 0.0.0.0 --port 5555 --browser none
     depends_on:
       - mongodb
+    networks:
+      - app-network
+
+  scraper:
+    build:
+      context: .
+      dockerfile: scraper/Dockerfile
+    environment:
+      - DATABASE_URL=mongodb://mongodb:27017/ai_marketing
+    volumes:
+      - ./scraper/facebook-session.json:/app/facebook-session.json
+    depends_on:
+      mongodb:
+        condition: service_healthy
     networks:
       - app-network
 
