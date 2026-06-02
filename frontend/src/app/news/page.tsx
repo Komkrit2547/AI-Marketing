@@ -8,6 +8,7 @@ export default function NewsPage() {
         <p className="text-gray-500">Aggregated local news and events.</p>
       </div>
       <NewsList />
+      
     </div>
   );
 }

@@ -1,53 +1,118 @@
 'use client';
 
-import { useCampaigns } from '@/hooks/useCampaigns';
+// import { useCampaigns } from '@/hooks/useCampaigns';
+
+type Campaign = {
+  id: number;
+  title: string;
+  description?: string;
+  caption?: string;
+  couponText?: string;
+  status: string;
+};
 
 const statusColors: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-700',
   active: 'bg-green-100 text-green-700',
   archived: 'bg-yellow-100 text-yellow-700',
-};
+}; 
 
-export default function CampaignList() {
-  const { data, isLoading, error } = useCampaigns();
+interface CampaignListProps {
+  campaigns: Campaign[];
+}
 
-  if (isLoading) return <div className="text-gray-500">Loading campaigns...</div>;
-  if (error) return <div className="text-red-500">Error loading campaigns</div>;
-
-  const campaigns = data?.data ?? [];
+export default function CampaignList({
+  campaigns,
+}: CampaignListProps) {
+  if (campaigns.length === 0){
+    return (
+      <div className = "bg-[#F8F6EF] border border-gray-400 rounded-[20px] h-[180px] flex items-center justify-center">
+        <p className="text-gray-400">No campaigns yet</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      {campaigns.length === 0 && (
-        <p className="text-gray-500">No campaigns yet.</p>
-      )}
+    <div className = "space-y-4">
       {campaigns.map((item) => (
-        <div key={item.id} className="bg-white rounded-lg shadow p-4">
+        <div key = {item.id} className="bg-[#F8F6EF] border border-gray-300 rounded-[20px] p-4">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-gray-900">{item.title}</h3>
-            <span
+            <h3 className="font-semibold text-[#434553]">{item.title}</h3>
+            <span 
               className={`text-xs px-2 py-1 rounded-full font-medium ${
-                statusColors[item.status] || 'bg-gray-100'
+              statusColors[item.status] || 'bg-gray-100'
               }`}
-            >
-              {item.status}
+            > 
+              {item.title}
             </span>
           </div>
+
           {item.description && (
-            <p className="text-gray-700 text-sm">{item.description}</p>
+            <p className="text-sm text-gray-600">
+              {item.description}
+            </p>
           )}
+
           {item.caption && (
             <div className="mt-2 bg-gray-50 rounded p-2">
-              <p className="text-sm text-gray-600 italic">&ldquo;{item.caption}&rdquo;</p>
+              <p className="text-sm italic text-gray-600">
+                "{item.caption}"
+              </p>
             </div>
           )}
+
           {item.couponText && (
-            <div className="mt-2 bg-purple-50 rounded p-2">
-              <p className="text-sm text-purple-700 font-medium">Coupon: {item.couponText}</p>
+            <div className="mt-2 bg-gray-50 rounded p-2">
+              <p className="text-sm text-purple-700 font-medium">
+                Coupon: {item.couponText}
+              </p>
             </div>
           )}
+        
         </div>
       ))}
     </div>
   );
 }
+  // const { data, isLoading, error } = useCampaigns();
+
+  // if (isLoading) return <div className="text-gray-500">Loading campaigns...</div>;
+  // if (error) return <div className="text-red-500">Error loading campaigns</div>;
+
+  // const campaigns = data?.data ?? [];
+
+  // return (
+  //   <div className="space-y-4">
+  //     {campaigns.length === 0 && (
+  //       <p className="text-gray-500">No campaigns yet.</p>
+  //     )}
+  //     {campaigns.map((item) => (
+  //       <div key={item.id} className="bg-white rounded-lg shadow p-4">
+  //         <div className="flex items-center justify-between mb-2">
+  //           <h3 className="font-semibold text-gray-900">{item.title}</h3>
+  //           <span
+  //             className={`text-xs px-2 py-1 rounded-full font-medium ${
+  //               statusColors[item.status] || 'bg-gray-100'
+  //             }`}
+  //           >
+  //             {item.status}
+  //           </span>
+  //         </div>
+  //         {item.description && (
+  //           <p className="text-gray-700 text-sm">{item.description}</p>
+  //         )}
+  //         {item.caption && (
+  //           <div className="mt-2 bg-gray-50 rounded p-2">
+  //             <p className="text-sm text-gray-600 italic">&ldquo;{item.caption}&rdquo;</p>
+  //           </div>
+  //         )}
+  //         {item.couponText && (
+  //           <div className="mt-2 bg-purple-50 rounded p-2">
+  //             <p className="text-sm text-purple-700 font-medium">Coupon: {item.couponText}</p>
+  //           </div>
+  //         )}
+  //       </div>
+  //     ))}
+  //   </div>
+  // );
+// }
