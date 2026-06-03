@@ -13,7 +13,7 @@ export default function Header() {
       >
         ☰
       </button>
-      <div className="text-sm text-gray-500">AI Contextual Marketing Dashboard</div>
+      <div className="text-sm text-gray-500">AI Marketing In Thap Sakae</div>
     </header>
   );
 }
