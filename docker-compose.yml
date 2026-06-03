@@ -60,7 +60,7 @@ services:
       - n8n_data:/home/node/.n8n
       - ./n8n/workflows:/home/node/.n8n/workflows
     entrypoint: ["tini", "--", "/bin/sh", "-c"]
-    command: ["n8n import:workflow --separate --input=/home/node/.n8n/workflows || true && n8n"]
+    command: ["n8n import:workflow --separate --input=/home/node/.n8n/workflows || true && n8n update:workflow --all --active=true || true && n8n"]
     depends_on:
       - mongodb
     networks:

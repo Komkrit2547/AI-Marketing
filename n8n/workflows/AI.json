@@ -1,0 +1,307 @@
+{
+  "name": "AI",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        -112
+      ],
+      "id": "ecf28c53-fac1-4e77-888a-2d36ddd292ce",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "collection": "community_posts",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.3,
+      "position": [
+        -48,
+        -176
+      ],
+      "id": "f327fd2d-ebae-4534-b1ed-b72183ba7c12",
+      "name": "MongoDB - Get FB Posts",
+      "credentials": {
+        "mongoDb": {
+          "id": "MbUVXiGJsrpRigCp",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "collection": "WeatherRecord",
+        "options": {},
+        "query": "{\"district\": \"Thap Sakae\"}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.3,
+      "position": [
+        -48,
+        -16
+      ],
+      "id": "1927ed0e-5ef0-4aee-a78d-1e734fc63caf",
+      "name": "MongoDB - Get Weather",
+      "credentials": {
+        "mongoDb": {
+          "id": "MbUVXiGJsrpRigCp",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "collection": "Business",
+        "options": {},
+        "query": "{\"city\": \"Thap Sakae District\"}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.3,
+      "position": [
+        -48,
+        144
+      ],
+      "id": "05ef8675-ff82-43dc-b573-fcfd6ee7e9e1",
+      "name": "MongoDB - Get Businesses",
+      "credentials": {
+        "mongoDb": {
+          "id": "MbUVXiGJsrpRigCp",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -384,
+        0
+      ],
+      "id": "107fc57c-6f7d-420d-8059-ea11d9b55db3",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst posts = [];\nconst weather = [];\nconst businesses = [];\n\nfor (const item of items) {\n\n  // Facebook Post\n  if (item.json.contentPreview) {\n    posts.push({\n      groupName: item.json.groupName,\n      content: item.json.contentPreview\n        ?.replace(/\\n/g, ' ')\n        ?.substring(0, 150)\n    });\n  }\n\n  // Weather\n  else if (item.json.temperature) {\n    weather.push({\n      weather: item.json.weather,\n      temperature: item.json.temperature,\n      humidity: item.json.humidity\n    });\n  }\n\n  // Business\n  else if (item.json.category) {\n    businesses.push({\n      name: item.json.name,\n      category: item.json.category\n    });\n  }\n\n}\n\nreturn [{\n  json: {\n    posts: posts.slice(0, 10),\n    weather: weather.slice(0, 1),\n    businesses: businesses.slice(0, 15)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        -80
+      ],
+      "id": "ee6e7d6c-5d72-437f-a746-01dac75bc3fd",
+      "name": "Build AI Context"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        288,
+        -128
+      ],
+      "id": "6648a13b-920e-426f-9011-4d5252e52db2",
+      "name": "Merge"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        576,
+        -80
+      ],
+      "id": "1762434a-e968-48a7-95eb-b5e36b76706c",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ JSON.stringify($json, null, 2) }}",
+        "options": {
+          "systemMessage": "You are an AI Marketing Analyst for local businesses.\n\nAnalyze:\n1. Local Facebook community posts\n2. Local weather conditions\n3. Local businesses\n\nFind:\n- Trending topics\n- Community interests\n- Local opportunities\n- Marketing opportunities\n\nReturn ONLY valid JSON.\n\n{\n  \"insights\": [\n    {\n      \"title\": \"text\",\n      \"summary\": \"text\",\n      \"recommendation\": \"text\",\n      \"category\": \"Community\"\n    }\n  ]\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1184,
+        -80
+      ],
+      "id": "8b5de246-f8a1-4b93-9f88-2246bfa229f1",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-2.5-flash-lite",
+        "options": {
+          "maxTokens": 1500
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        144
+      ],
+      "id": "17ebd832-5e3d-4c89-934e-93878d59864a",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "ogw6G2U53CJhY4qw",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"insights\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"title\": {\n            \"type\": \"string\"\n          },\n          \"summary\": {\n            \"type\": \"string\"\n          },\n          \"recommendation\": {\n            \"type\": \"string\"\n          },\n          \"category\": {\n            \"type\": \"string\"\n          }\n        },\n        \"required\": [\n          \"title\",\n          \"summary\",\n          \"recommendation\",\n          \"category\"\n        ]\n      }\n    }\n  },\n  \"required\": [\n    \"insights\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1360,
+        128
+      ],
+      "id": "9ac243db-a8d0-4744-999f-cb14c9fa24d1",
+      "name": "Structured Output Parser"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "MongoDB - Get FB Posts",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "MongoDB - Get Weather",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "MongoDB - Get Businesses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build AI Context": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB - Get FB Posts": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB - Get Weather": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB - Get Businesses": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Build AI Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "88060b7c-ece4-4f92-a6d4-92382bda0004",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cf81b7148d16d6e07a79b947e5ebd92571d983941495247927cd17f0aad7846b"
+  },
+  "id": "kOYVTkpmUhkSD9Zp",
+  "tags": []
+}
