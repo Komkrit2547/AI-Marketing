@@ -7,14 +7,14 @@ import { useCampaigns } from '@/hooks/useCampaigns';
 import Link from 'next/link';
 
 type DashboardStatsProps = {
-  totalShop: number;
+  totalShops: number;
   totalTrends: number;
   totalCampaigns: number;
   totalAiInsights: number;
 }
 
 export default function DashboardStats({
-  totalShop,
+  totalShops,
   totalTrends,
   totalCampaigns,
   totalAiInsights,
@@ -22,7 +22,7 @@ export default function DashboardStats({
   const stats = [
     {
       label: 'ร้านทั้งหมด',
-      value: totalShop,
+      value: totalShops,
       icon: 'storefront',
       href: null,
     },
