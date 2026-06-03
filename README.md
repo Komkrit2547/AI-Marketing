@@ -126,8 +126,8 @@ Dashboard จะพร้อมใช้งานที่ `http://localhost:300
 
 ```bash
 # อัปเดต Prisma (ทำที่ Root ได้เลย)
-npx prisma generate
-npx prisma db push
+docker compose run --rm backend npx prisma db push
+docker compose up -d --build
 
 # Backend
 cd backend

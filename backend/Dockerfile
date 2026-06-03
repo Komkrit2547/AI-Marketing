@@ -12,6 +12,7 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
+COPY thap_sakae_businesses_cleaned.json ./
 COPY backend/package.json ./
 EXPOSE 4000
-CMD ["node", "dist/index.js"]
+CMD ["sh", "-c", "npx prisma db push && node prisma/seed.js && node dist/index.js"]

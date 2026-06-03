@@ -7,17 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model News {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  content     String?
-  source      String
-  url         String?
-  category    String?
-  publishedAt DateTime?
-  createdAt   DateTime @default(now())
-}
-
 model AIInsight {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   title           String
@@ -78,6 +67,7 @@ model ScraperLog {
 
 model WeatherRecord {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
+
   district    String
   province    String
 
@@ -89,6 +79,42 @@ model WeatherRecord {
 
   source      String?
 
-  recordedAt  DateTime
+  recordedAt  DateTime? @default(now())
+
+  createdAt   DateTime? @default(now())
+  updatedAt   DateTime? @updatedAt
+}
+
+model Business {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  placeId     String?  @unique
+
+  name        String
+  category    String?
+
+  address     String?
+  city        String?
+  province    String?
+
+  latitude    Float?
+  longitude   Float?
+
+  phone       String?
+  website     String?
+
+  rating      Float?
+  reviewCount Int?
+
+  googleUrl   String?
+
+  source      String   @default("google_maps")
+
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([city])
+  @@index([province])
+  @@index([rating])
 }
