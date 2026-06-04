@@ -1,11 +1,11 @@
 import { fetchApi } from '@/lib/api';
-import type { ApiResponse, News } from '@/types';
 
 export const newsService = {
-  getAll(page = 1, limit = 20) {
-    return fetchApi<ApiResponse<News[]>>(`/news?page=${page}&limit=${limit}`);
+  getNewsData(date?: string) {
+    const query = date ? `?date=${date}` : '';
+    return fetchApi<any>(`/news${query}`);
   },
-  getById(id: string) {
-    return fetchApi<ApiResponse<News>>(`/news/${id}`);
-  },
+  getLatestWeather() {
+    return fetchApi<any>(`/news/weather`);
+  }
 };

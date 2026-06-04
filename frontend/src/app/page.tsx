@@ -3,31 +3,29 @@
 import DashboardStats from '@/features/dashboard/DashboardStats';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { useNews } from '@/hooks/useNews';
-// import { campaignsService } from '@/services/campaigns';
+import { useDashboard } from '@/hooks/useDashboard';
 // import InsightList from '@/features/insights/InsightList';
 // import NewsList from '@/features/news/NewsList';
 
 export default function HomePage() {
   const {data: campaignsData} = useCampaigns();
   const {data: newsData} = useNews();
+  const {data: dashboardData} = useDashboard();
 
   const campaigns = campaignsData?.data ?? [];
   const news = newsData?.data ?? [];
   
-  const totalShops = 0; // ร้านทั้งหมด รอ Backend ร้านค้า
-  const totalTrends = news.length; // จำนวนข่าวทั้งหมด
+  const totalShops = dashboardData?.totalShops ?? 0; // ร้านทั้งหมดจาก Backend
+  const totalTrends = dashboardData?.currentMonthTrends ?? 0; // จำนวนเทรนด์ในเดือนนี้
   const totalCampaigns = campaignsData?.pagination?.total ?? 0; //จำนวน Campaign ทั้งหมด ใช้ pagination.total เพื่อรองรับข้อมูลหลายหน้า
 
   const totalAiInsights = campaigns.filter(
     (campaign) => campaign.status === 'draft'
   ).length; //AI Drafts
 
-  const topShops: {
-    id: number;
-    name: string;
-  }[] = []; // ร้านยอดฮิต
+  const topShops = dashboardData?.topPopularShops ?? []; // ร้านยอดฮิต 5 อันดับ
 
-  const keywords: string[] = []; // Keyword Cloud
+  const keywords = dashboardData?.keywords ?? []; // Keyword Cloud
 
 
   // //Backend มาแล้วค่อยใช้
@@ -117,22 +115,33 @@ export default function HomePage() {
               </h2>
             </div>
 
-            <div className="min-h-[250px] rounded-2xl bg-[#F1EFE8] flex items-center justify-center">
+            <div className="min-h-[250px] rounded-2xl bg-[#F1EFE8] flex items-center justify-center relative overflow-hidden">
 
               {keywords.length === 0 ? (
                 <p className="text-gray-400">
                   No keyword data available
                 </p>
               ) : (
-                <div className="flex flex-wrap gap-3 p-6">
-                  {keywords.map((keyword) => (
-                    <span
-                      key={keyword}
-                      className="bg-white px-4 py-2 rounded-full text-[#434553] shadow-sm"
-                    >
-                      {keyword}
-                    </span>
-                  ))}
+                <div className="flex flex-wrap gap-x-12 gap-y-8 p-10 justify-center items-center w-full h-full">
+                  {keywords.map((keyword, index) => {
+                    const colors = ['text-orange-500', 'text-blue-500', 'text-green-500', 'text-purple-500', 'text-red-500', 'text-yellow-600'];
+                    const sizes = ['text-xl', 'text-2xl', 'text-3xl', 'text-4xl'];
+                    
+                    const color = colors[index % colors.length];
+                    const size = sizes[(index * 3) % sizes.length];
+                    // Create a scattered look with margins
+                    const marginTop = (index % 3 === 0) ? '-20px' : (index % 3 === 1) ? '30px' : '0px';
+
+                    return (
+                      <span
+                        key={keyword}
+                        className={`${color} ${size} font-medium hover:scale-125 transition-transform duration-300 cursor-default select-none`}
+                        style={{ marginTop }}
+                      >
+                        {keyword}
+                      </span>
+                    );
+                  })}
                 </div>
               )}
             </div>

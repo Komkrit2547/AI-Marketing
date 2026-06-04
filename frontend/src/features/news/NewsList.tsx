@@ -1,7 +1,7 @@
 'use client';
 
-import { useNews } from '@/hooks/useNews';
-// import { useState } from 'react';
+import { useState } from 'react';
+import { useNews, useWeather } from '@/hooks/useNews';
 
 type Props = {
   selectedDate: string;
@@ -11,105 +11,101 @@ type Props = {
 export default function NewsList({
   selectedDate,
   selectedArea,
-}: Props){
+}: Props) {
+  const { data: newsData, isLoading: isNewsLoading } = useNews(selectedDate);
+  const { data: weatherRes, isLoading: isWeatherLoading } = useWeather();
 
-  // const [selectedDate, setSelectedDate] = useState('');
+  const weather = weatherRes?.data;
+  const trends = newsData?.data?.trending || [];
+  const news = newsData?.data?.news || [];
 
-  const {data,isLoading,} = useNews();
-  // const weather = data?.weather;
-  // const trends = data?.trends ?? [];
-  const news = data?.data ?? []; //Backend มาแล้วค่อยใช้
-
-  // Placeholder รอ Backend
-  const weather: any = null;
-
-  const trends: {
-    keyword: string;
-    count: number;
-  }[] = [];
-
+  const [selectedNews, setSelectedNews] = useState<any>(null);
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+  const totalPages = Math.ceil(news.length / itemsPerPage);
+  
+  const currentNews = news.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
-    <div className="grid grid-cols-12 gap-6">
-
+    <div className="grid grid-cols-12 gap-6 relative">
       {/* Weather */}
-      <div className="col-span-12 xl:col-span-4">
-        <div className="bg-[#F8F6EF] border border-gray-400 rounded-[28px] p-8">
-
+      <div className="col-span-12 xl:col-span-4 flex flex-col">
+        <div className="bg-[#F8F6EF] border border-gray-400 rounded-[28px] p-8 flex-1 flex flex-col">
           <div className="flex items-center gap-3 mb-6">
             <span className="material-symbols-outlined text-[#8B1E12]">
               partly_cloudy_day
             </span>
-
             <h2 className="text-2xl font-semibold text-[#434553]">
               สภาพอากาศ
             </h2>
           </div>
 
-          {weather ? (
-            <div className="flex flex-col items-center justify-center h-[220px]">
-              <p className="text-6xl font-bold text-[#434553]">
-                {weather.temperature}°
+          {isWeatherLoading ? (
+             <div className="flex-1 flex items-center justify-center min-h-[220px]">
+               <p className="text-gray-400">Loading weather...</p>
+             </div>
+          ) : weather ? (
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[220px]">
+              <p className="text-[5rem] leading-none font-bold text-[#434553]">
+                {weather.temperature ?? '--'}°
               </p>
-
-              <p className="text-6xl font-bold text-[#434553]">
-                {weather.condition}
+              <p className="text-2xl font-medium text-[#434553] mt-4">
+                {weather.weather ?? 'N/A'}
               </p>
-
-              <p className="text-sm text-gray-400">
-                Humidity {weather.humidity}%
+              <p className="text-base text-gray-500 mt-2">
+                Humidity {weather.humidity ?? '--'}%
+              </p>
+              <p className="text-xs text-gray-400 mt-4">
+                อัพเดทล่าสุด: {new Date(weather.createdAt).toLocaleTimeString('th-TH')}
               </p>
             </div>
           ) : (
-            <div className="h-[220px] flex items-center justify-center">
-              <p className="text-gray-400">
-                No weather data available
-              </p>
+            <div className="flex-1 flex items-center justify-center min-h-[220px]">
+              <p className="text-gray-400">No weather data available</p>
             </div>
           )}
         </div>
       </div>
 
       {/* Trending */}
-      <div className="col-span-12 xl:col-span-8">
-        <div className="bg-[#F8F6EF] border border-gray-400 rounded-[28px] p-8">
-
+      <div className="col-span-12 xl:col-span-8 flex flex-col">
+        <div className="bg-[#F8F6EF] border border-gray-400 rounded-[28px] p-8 flex-1">
           <div className="flex items-center gap-3 mb-6">
             <span className="material-symbols-outlined text-[#8B1E12]">
               local_fire_department
             </span>
-
             <h2 className="text-2xl font-semibold text-[#434553]">
               กำลังถูกพูดถึง
             </h2>
           </div>
 
-          {trends.length === 0 ? (
-            <div className="h-[220px] flex items-center justify-center">
-              <p className="text-gray-400">
-                No trending topics
-              </p>
+          {isNewsLoading ? (
+            <div className="flex items-center justify-center min-h-[220px]">
+               <p className="text-gray-400">Loading trends...</p>
+             </div>
+          ) : trends.length === 0 ? (
+            <div className="flex items-center justify-center min-h-[220px]">
+              <p className="text-gray-400">No trending topics for this date</p>
             </div>
-          ): (
+          ) : (
             <div className="space-y-4">
-              {trends.map((trend, index) => (
+              {trends.map((trend: any, index: number) => (
                 <div 
-                  key={trend.keyword} 
-                  className="flex items-center justify-between bg-white rounded-xl px-5 py-4">
-                    <div className="flex items-center gap-4">
-                      <span className="text-[#8B1E12] font-bold">
-                        #{index + 1}
-                      </span>
-
-                      <span className="text-[#434553]">
-                        {trend.keyword}
-                      </span>
-                    </div>
-                    <span className="text-gray-400">
-                      {trend.count}
-                    </span>
+                  key={trend.id} 
+                  className="flex items-center justify-between bg-white rounded-xl px-5 py-4 shadow-sm"
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="text-[#8B1E12] font-bold">#{index + 1}</span>
+                    <span className="text-[#434553] font-medium">{trend.title}</span>
                   </div>
-                ))}
+                  <span className="text-gray-400 text-sm">{trend.category ?? 'General'}</span>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -118,156 +114,124 @@ export default function NewsList({
       {/* News */}
       <div className="col-span-12">
         <div className="bg-[#F8F6EF] border border-gray-400 rounded-[28px] p-8">
-
           <div className="flex items-center gap-3 mb-6">
             <span className="material-symbols-outlined text-[#8B1E12]">
               article
             </span>
-
             <h2 className="text-2xl font-semibold text-[#434553]">
               ข่าวสาร
             </h2>
           </div>
 
-          {news.length === 0 ? (
+          {isNewsLoading ? (
             <div className="h-[250px] flex items-center justify-center">
-              <p className="text-gray-400">
-                No news available
-              </p>
+              <p className="text-gray-400">Loading news...</p>
+            </div>
+          ) : news.length === 0 ? (
+            <div className="h-[250px] flex items-center justify-center">
+              <p className="text-gray-400">No news available for this date</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {news.map((item) => (
-                <div key={item.id} className="bg-white border border-gray-200 rounded-xl p-4">
-                  <h3 className="font-semibold text-[#434553]">
-                    {item.title}
-                  </h3>
-
-                  <div className="flex gap-4 mt-2 text-sm text-gray-500">
-                    {item.source && (
-                      <span>{item.source}</span>
-                    )}
-                    {item.publishedAt && (
-                      <span>{item.publishedAt}</span>
-                    )}
+            <>
+              <div className="space-y-4">
+                {currentNews.map((item: any) => (
+                  <div 
+                    key={item.id} 
+                    onClick={() => setSelectedNews(item)}
+                    className="bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-semibold text-[#434553] line-clamp-1 flex-1">
+                        {item.contentPreview || item.content}
+                      </h3>
+                    </div>
+                    <div className="flex gap-4 mt-2 text-sm text-gray-500">
+                      <span>{item.source} - {item.groupName}</span>
+                      <span>
+                        {item.postedAt ? new Date(item.postedAt).toLocaleDateString('th-TH') : ''}
+                      </span>
+                    </div>
                   </div>
+                ))}
+              </div>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-8">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-sm">chevron_left</span>
+                  </button>
+                  
+                  <span className="text-sm font-medium text-[#434553]">
+                    หน้า {currentPage} จาก {totalPages}
+                  </span>
+
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-sm">chevron_right</span>
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>
+
+      {/* Popup Modal */}
+      {selectedNews && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-[24px] p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative shadow-2xl">
+            <button 
+              onClick={() => setSelectedNews(null)}
+              className="absolute top-6 right-6 text-gray-400 hover:text-gray-700"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+            <div className="flex items-center gap-2 text-sm text-[#8B1E12] font-semibold mb-4">
+              <span className="material-symbols-outlined text-base">source</span>
+              {selectedNews.source} - {selectedNews.groupName}
+            </div>
+            <p className="text-[#434553] whitespace-pre-wrap leading-relaxed text-lg">
+              {selectedNews.contentFull || selectedNews.content}
+            </p>
+            <div className="flex gap-6 mt-8 text-sm text-gray-500 border-t pt-4 border-gray-100">
+              <span className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">thumb_up</span>
+                {selectedNews.reactionCount} Reactions
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">comment</span>
+                {selectedNews.commentCount} Comments
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">share</span>
+                {selectedNews.shareCount} Shares
+              </span>
+              <span className="flex items-center gap-1 ml-auto">
+                <span className="material-symbols-outlined text-sm">calendar_month</span>
+                {selectedNews.postedAt ? new Date(selectedNews.postedAt).toLocaleString('th-TH') : ''}
+              </span>
+            </div>
+            {selectedNews.postUrl && (
+              <a 
+                href={selectedNews.postUrl} 
+                target="_blank" 
+                rel="noreferrer"
+                className="mt-6 block text-center bg-[#F8F6EF] text-[#434553] font-semibold py-3 rounded-xl hover:bg-[#eae6d5] transition-colors"
+              >
+                ดูโพสต์ต้นฉบับ
+              </a>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-  // const { data, isLoading, error } = useNews();
-
-  // if (isLoading) return <div className="text-gray-500">Loading news...</div>;
-  // if (error) return <div className="text-red-500">Error loading news</div>;
-
-  // const newsItems = data?.data ?? [];
-
-  // return (
-  //   <div className="space-y-4">
-  //     {newsItems.length === 0 && (
-  //       <p className="text-gray-500">No news items yet. n8n workflow will populate this.</p>
-  //     )}
-  //     {newsItems.map((item) => (
-  //       <div key={item.id} className="bg-white rounded-lg shadow p-4">
-  //         <div className="flex items-start justify-between">
-  //           <div>
-  //             <h3 className="font-semibold text-gray-900">{item.title}</h3>
-  //             <p className="text-sm text-gray-500 mt-1">
-  //               {item.source} · {item.category && `${item.category} · `}
-  //               {item.publishedAt ? new Date(item.publishedAt).toLocaleDateString() : ''}
-  //             </p>
-  //           </div>
-  //         </div>
-  //         {item.content && (
-  //           <p className="text-gray-700 mt-2 text-sm line-clamp-2">{item.content}</p>
-  //         )}
-  //         {item.url && (
-  //           <a
-  //             href={item.url}
-  //             target="_blank"
-  //             rel="noopener noreferrer"
-  //             className="text-blue-600 text-sm mt-2 inline-block hover:underline"
-  //           >
-  //             Read more →
-  //           </a>
-  //         )}
-  //       </div>
-  //     ))}
-  //   </div>
-  // );
-
-  // const [date, setDate] = useState('');
-  // const [area, setArea] = useState('ทับสะแก');
-
-  // return (
-  //   <div className="space-y-8">
-  //     {/* Filters */}
-  //     <div className="flex flex-wrap gap-6">
-
-  //       {/* Date */}
-  //       <div className="flex items-center gap-3 bg-[#F8F6EF] border border-gray-300 rounded-lg px-4 py-2">
-  //         <span className="material-symbols-outlined text-[#434553]">
-  //           calendar_month
-  //         </span>
-
-  //         <input
-  //           type="date"
-  //           value={date}
-  //           onChange={(e) => setDate(e.target.value)}
-  //           className="
-  //             bg-transparent
-  //             outline-none
-  //             text-[#434553]
-  //           "
-  //         />
-  //       </div>
-  //     {/* Area */}
-  //       <div className="flex items-center gap-3 bg-[#F8F6EF] border border-gray-300 rounded-lg px-4 py-2">
-  //         <span className="material-symbols-outlined text-[#434553]">
-  //           location_on
-  //         </span>
-
-  //         <select
-  //           value={area}
-  //           onChange={(e) => setArea(e.target.value)}
-  //           className="
-  //             bg-transparent
-  //             outline-none
-  //             text-[#434553]
-  //             cursor-pointer
-  //           "
-  //         >
-  //           <option value="ทับสะแก">ทับสะแก</option>
-  //         </select>
-  //       </div>
-  //     </div>
-
-  //     {/* Weather + Trending */}
-  //     <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-  //       <div className="bg-[#F8F6EF] border border-gray-400 rounded-[24px] p-8">
-  //         <h2 className="text-3xl font-semibold text-[#434553] mb-6">
-  //           สภาพอากาศ
-  //         </h2>
-
-  //         <div className="h-[260px] bg-[#F4F0E3] rounded-2xl" />
-  //       </div>
-
-
-  //     </div>
-
-  //     {/* News */}
-  //     <div className="bg-[#F8F6EF] border border-gray-400 rounded-[24px] p-8">
-  //       <h2 className="text-3xl font-semibold text-[#434553] mb-6">
-  //         ข่าวสาร
-  //       </h2>
-
-  //       <div className="h-[320px] bg-[#F4F0E3] rounded-2xl" />
-  //     </div>
-  //   </div>
-  // );
-

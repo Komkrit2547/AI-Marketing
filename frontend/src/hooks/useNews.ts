@@ -3,17 +3,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { newsService } from '@/services/news';
 
-export function useNews(page = 1, limit = 20) {
+export function useNews(date?: string) {
   return useQuery({
-    queryKey: ['news', page, limit],
-    queryFn: () => newsService.getAll(page, limit),
+    queryKey: ['news', date],
+    queryFn: () => newsService.getNewsData(date),
   });
 }
 
-export function useNewsItem(id: string) {
+export function useWeather() {
   return useQuery({
-    queryKey: ['news', id],
-    queryFn: () => newsService.getById(id),
-    enabled: !!id,
+    queryKey: ['weather'],
+    queryFn: () => newsService.getLatestWeather(),
+    refetchInterval: 3000, // Poll every 3 seconds for near real-time
   });
 }

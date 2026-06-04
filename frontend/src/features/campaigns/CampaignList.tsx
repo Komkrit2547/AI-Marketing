@@ -10,10 +10,14 @@ const statusColors: Record<string, string> = {
 
 interface CampaignListProps {
   campaigns: Campaign[];
+  onAction?: (id: string) => void;
+  actionLabel?: string;
 }
 
 export default function CampaignList({
   campaigns,
+  onAction,
+  actionLabel,
 }: CampaignListProps) {
   if (campaigns.length === 0){
     return (
@@ -58,6 +62,17 @@ export default function CampaignList({
                 Coupon: {item.couponText}
               </p>
             </div>
+          )}
+          {onAction && (
+            <button
+              className="mt-2 px-4 py-2 bg-[#F8B23D] hover:bg-[#F0A72D] text-[#434553] font-medium rounded-lg flex items-center gap-1"
+              onClick={() => onAction(item.id)}
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                arrow_forward
+              </span>
+              {actionLabel ?? 'Action'}
+            </button>
           )}
         
         </div>

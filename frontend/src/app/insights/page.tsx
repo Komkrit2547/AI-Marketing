@@ -4,21 +4,9 @@ import { useState } from 'react';
 import InsightList from '@/features/insights/InsightList';
 
 export default function InsightsPage() {
-
   const [selectedDate, setSelectedDate] = useState('');
-  const [selectedArea, setSelectedArea] = useState('');
-
-  // const { data } = useShops(
-  //   selectedDate,
-  //   selectedArea
-  // );
-
-  // const totalShops =
-  //   data?.pagination?.total ??
-  //   data?.data?.length ??
-  //   0;  Backend มาแล้วใช้แบบนี้
-
-  const totalShops = 0;
+  const [selectedArea, setSelectedArea] = useState('thap sakae');
+  const [totalShops, setTotalShops] = useState(0);
 
   return (
     <div className="space-y-6">
@@ -64,16 +52,15 @@ export default function InsightsPage() {
             </span>
           </div>
         </div>
+        
         <InsightList
           selectedDate={selectedDate}
           selectedArea={selectedArea}
+          onTotalChange={setTotalShops}
         />
 
       </div>
 
     </div>
-
   );
 }
-
- 

@@ -32,6 +32,26 @@ export interface Campaign {
   updatedAt: string;
 }
 
+export interface Business {
+  id: string;
+  placeId?: string;
+  name: string;
+  category?: string;
+  address?: string;
+  city?: string;
+  province?: string;
+  latitude?: number;
+  longitude?: number;
+  phone?: string;
+  website?: string;
+  rating?: number;
+  reviewCount?: number;
+  googleUrl?: string;
+  source: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Pagination {
   page: number;
   limit: number;
@@ -42,5 +62,8 @@ export interface ApiResponse<T> {
   success: boolean;
   data: T;
   error?: string;
+  total?: number;
+  page?: number;
+  limit?: number;
   pagination?: Pagination;
 }
