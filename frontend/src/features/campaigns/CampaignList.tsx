@@ -1,15 +1,6 @@
 'use client';
 
-// import { useCampaigns } from '@/hooks/useCampaigns';
-
-type Campaign = {
-  id: number;
-  title: string;
-  description?: string;
-  caption?: string;
-  couponText?: string;
-  status: string;
-};
+import { Campaign } from '@/types';
 
 const statusColors: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-700',

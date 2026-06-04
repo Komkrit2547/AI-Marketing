@@ -8,15 +8,38 @@ export const campaignsService = {
       prisma.campaign.findMany({
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { id: 'desc' },
       }),
       prisma.campaign.count(),
     ]);
-    return { data, total, page, limit };
+
+    const formattedData = data.map(item => {
+      const isMissingDates = (!item.createdAt || !item.updatedAt);
+      if (isMissingDates && typeof item.id === 'string' && item.id.length === 24) {
+        const fallbackDate = new Date(parseInt(item.id.substring(0, 8), 16) * 1000);
+        return {
+          ...item,
+          createdAt: item.createdAt || fallbackDate,
+          updatedAt: item.updatedAt || fallbackDate,
+        };
+      }
+      return item;
+    });
+
+    return { data: formattedData, total, page, limit };
   },
 
   async findById(id: string) {
-    return prisma.campaign.findUnique({ where: { id } });
+    const item = await prisma.campaign.findUnique({ where: { id } });
+    if (item && (!item.createdAt || !item.updatedAt) && typeof item.id === 'string' && item.id.length === 24) {
+      const fallbackDate = new Date(parseInt(item.id.substring(0, 8), 16) * 1000);
+      return {
+        ...item,
+        createdAt: item.createdAt || fallbackDate,
+        updatedAt: item.updatedAt || fallbackDate,
+      };
+    }
+    return item;
   },
 
   async create(input: CreateCampaignInput) {

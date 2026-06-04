@@ -39,6 +39,7 @@ services:
     volumes:
       - mongodb_data:/data/db
       - ./backend/database/init.js:/docker-entrypoint-initdb.d/init.js
+      - ./backend/database/fix-ai-insight-dates.js:/scripts/fix-ai-insight-dates.js
     command: ["--replSet", "rs0", "--bind_ip_all"]
     healthcheck:
       test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}) }" | mongosh --quiet
@@ -48,6 +49,18 @@ services:
       retries: 30
     networks:
       - app-network
+
+  db-migration:
+    image: mongo:7
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    entrypoint: ["mongosh", "mongodb://mongodb:27017/ai_marketing", "/scripts/fix-ai-insight-dates.js"]
+    volumes:
+      - ./backend/database/fix-ai-insight-dates.js:/scripts/fix-ai-insight-dates.js
+    networks:
+      - app-network
+    restart: "no"
 
   n8n:
     image: n8nio/n8n:latest

@@ -3,10 +3,14 @@
 import { useNews } from '@/hooks/useNews';
 // import { useState } from 'react';
 
-type Props = {selectedDate: string;};
+type Props = {
+  selectedDate: string;
+  selectedArea: string;
+};
 
 export default function NewsList({
   selectedDate,
+  selectedArea,
 }: Props){
 
   // const [selectedDate, setSelectedDate] = useState('');
@@ -14,10 +18,10 @@ export default function NewsList({
   const {data,isLoading,} = useNews();
   // const weather = data?.weather;
   // const trends = data?.trends ?? [];
-  const news = data?.news ?? []; //Backend มาแล้วค่อยใช้
+  const news = data?.data ?? []; //Backend มาแล้วค่อยใช้
 
   // Placeholder รอ Backend
-  const weather = null;
+  const weather: any = null;
 
   const trends: {
     keyword: string;
@@ -143,8 +147,8 @@ export default function NewsList({
                     {item.source && (
                       <span>{item.source}</span>
                     )}
-                    {item.date && (
-                      <span>{item.date}</span>
+                    {item.publishedAt && (
+                      <span>{item.publishedAt}</span>
                     )}
                   </div>
                 </div>

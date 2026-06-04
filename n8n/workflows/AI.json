@@ -95,7 +95,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\n\nconst posts = [];\nconst weather = [];\nconst businesses = [];\n\nfor (const item of items) {\n\n  // Facebook Post\n  if (item.json.contentPreview) {\n    posts.push({\n      groupName: item.json.groupName,\n      content: item.json.contentPreview\n        ?.replace(/\\n/g, ' ')\n        ?.substring(0, 150)\n    });\n  }\n\n  // Weather\n  else if (item.json.temperature) {\n    weather.push({\n      weather: item.json.weather,\n      temperature: item.json.temperature,\n      humidity: item.json.humidity\n    });\n  }\n\n  // Business\n  else if (item.json.category) {\n    businesses.push({\n      name: item.json.name,\n      category: item.json.category\n    });\n  }\n\n}\n\nreturn [{\n  json: {\n    posts: posts.slice(0, 10),\n    weather: weather.slice(0, 1),\n    businesses: businesses.slice(0, 15)\n  }\n}];"
+        "jsCode": "const items = $input.all();\n\nconst posts = [];\nconst weather = [];\nconst businesses = [];\n\nconst today = new Date();\ntoday.setHours(0, 0, 0, 0);\n\nfor (const item of items) {\n\n  // ===== Facebook Posts =====\n  if (item.json.contentPreview) {\n\n    const postDate = item.json.postedAt\n      ? new Date(item.json.postedAt)\n      : null;\n\n    const score =\n      (item.json.reactionCount || 0) * 1 +\n      (item.json.commentCount || 0) * 3 +\n      (item.json.shareCount || 0) * 5;\n\n    posts.push({\n      groupName: item.json.groupName,\n\n      content: item.json.contentPreview\n        ?.replace(/\\n/g, ' ')\n        ?.substring(0, 200),\n\n      reactionCount: item.json.reactionCount || 0,\n      commentCount: item.json.commentCount || 0,\n      shareCount: item.json.shareCount || 0,\n\n      engagementScore: score,\n\n      postedAt: item.json.postedAt\n    });\n  }\n\n  // ===== Weather =====\n  else if (item.json.temperature) {\n\n    weather.push({\n      weather: item.json.weather,\n      temperature: item.json.temperature,\n      humidity: item.json.humidity\n    });\n\n  }\n\n  // ===== Businesses =====\n  else if (item.json.category) {\n\n    businesses.push({\n      name: item.json.name,\n      category: item.json.category\n    });\n\n  }\n}\n\n// เรียงโพสต์จากคะแนนมากไปน้อย\nposts.sort(\n  (a, b) => b.engagementScore - a.engagementScore\n);\n\nreturn [{\n  json: {\n    posts: posts.slice(0, 10),\n    weather: weather.slice(0, 1),\n    businesses: businesses.slice(0, 15)\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -133,7 +133,7 @@
         "promptType": "define",
         "text": "={{ JSON.stringify($json, null, 2) }}",
         "options": {
-          "systemMessage": "You are an AI Marketing Analyst for local businesses.\n\nAnalyze:\n1. Local Facebook community posts\n2. Local weather conditions\n3. Local businesses\n\nFind:\n- Trending topics\n- Community interests\n- Local opportunities\n- Marketing opportunities\n\nReturn ONLY valid JSON.\n\n{\n  \"insights\": [\n    {\n      \"title\": \"text\",\n      \"summary\": \"text\",\n      \"recommendation\": \"text\",\n      \"category\": \"Community\"\n    }\n  ]\n}"
+          "systemMessage": "คุณคือ AI Marketing Analyst สำหรับธุรกิจท้องถิ่นในอำเภอทับสะแก จังหวัดประจวบคีรีขันธ์\n\nหน้าที่ของคุณคือวิเคราะห์ข้อมูลจาก\n\n1. โพสต์ในกลุ่ม Facebook ชุมชนท้องถิ่น\n2. ข้อมูลสภาพอากาศ\n3. ข้อมูลร้านค้าและธุรกิจในพื้นที่\n\nเป้าหมายการวิเคราะห์\n\n* ค้นหาหัวข้อหรือกระแสที่กำลังได้รับความสนใจในชุมชน\n* วิเคราะห์ความต้องการของผู้บริโภคในพื้นที่\n* ระบุโอกาสทางธุรกิจที่น่าสนใจ\n* ค้นหาโอกาสทางการตลาดสำหรับผู้ประกอบการ\n* วิเคราะห์แนวโน้มพฤติกรรมผู้บริโภค\n* สรุปคำแนะนำที่สามารถนำไปใช้งานได้จริง\n\nข้อกำหนดสำคัญ\n\n* วิเคราะห์จากข้อมูลที่ได้รับเท่านั้น\n* ห้ามสร้างข้อมูลที่ไม่มีอยู่ในข้อมูลต้นทาง\n* เขียนผลลัพธ์เป็นภาษาไทยทั้งหมด\n* ใช้ภาษาที่เข้าใจง่าย เหมาะสำหรับผู้ประกอบการ SME\n* สรุปให้กระชับ แต่มีรายละเอียดเพียงพอสำหรับการตัดสินใจ\n* ให้ความสำคัญกับโพสต์ที่มี engagementScore สูง\n* engagementScore คำนวณจากยอดไลก์ คอมเมนต์ และแชร์\n* หากโพสต์ใดมี engagementScore สูงกว่าค่าเฉลี่ย ให้ถือว่าเป็นหัวข้อที่กำลังได้รับความสนใจของชุมชน\n* ให้ความสำคัญกับโพสต์ที่มีการแชร์และคอมเมนต์สูงมากกว่ายอดไลก์\n* วิเคราะห์แนวโน้มจากโพสต์ที่ได้รับความสนใจสูงเป็นลำดับแรก\n\nหลักการจัดหมวดหมู่\n\nตัวอย่างหมวดหมู่ที่สามารถใช้ได้\n\n* อสังหาริมทรัพย์\n* ร้านอาหารและเครื่องดื่ม\n* การท่องเที่ยว\n* การเกษตร\n* ค้าปลีก\n* สุขภาพ\n* การศึกษา\n* ชุมชน\n* สภาพอากาศ\n* การตลาด\n* ธุรกิจท้องถิ่น\n\nกำหนดระดับความสำคัญ\n\npriority:\n\n* สูง\n* กลาง\n* ต่ำ\n\nให้พิจารณาจาก\n\n* engagementScore\n* จำนวนโพสต์ที่พูดถึงหัวข้อเดียวกัน\n* ผลกระทบต่อธุรกิจในพื้นที่\n\nส่งกลับเฉพาะ JSON ที่ถูกต้องเท่านั้น\n\n{\n\"insights\": [\n{\n\"title\": \"ชื่อ Insight ภาษาไทย\",\n\"summary\": \"สรุปสถานการณ์หรือข้อมูลที่ค้นพบ\",\n\"recommendation\": \"คำแนะนำทางธุรกิจหรือการตลาด\",\n\"category\": \"หมวดหมู่\",\n\"priority\": \"สูง\"\n}\n]\n}\n"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -169,16 +169,187 @@
     },
     {
       "parameters": {
-        "jsonSchemaExample": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"insights\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"title\": {\n            \"type\": \"string\"\n          },\n          \"summary\": {\n            \"type\": \"string\"\n          },\n          \"recommendation\": {\n            \"type\": \"string\"\n          },\n          \"category\": {\n            \"type\": \"string\"\n          }\n        },\n        \"required\": [\n          \"title\",\n          \"summary\",\n          \"recommendation\",\n          \"category\"\n        ]\n      }\n    }\n  },\n  \"required\": [\n    \"insights\"\n  ]\n}"
+        "jsCode": "let text = $json.output;\n\n// ลบ markdown code block\ntext = text\n  .replace(/^```json\\s*/i, '')\n  .replace(/\\s*```$/i, '')\n  .trim();\n\nconst data = JSON.parse(text);\n\nreturn data.insights.map((insight, index) => ({\n  json: {\n    title: insight.title || '',\n    summary: insight.summary || '',\n    recommendation: insight.recommendation || '',\n    category: insight.category || '',\n    priority: insight.priority || 'กลาง',\n    rank: index + 1\n  }\n}));"
       },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1648,
+        -80
+      ],
+      "id": "11dec4cd-32c9-461b-ae0e-48e556846969",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "AIInsight",
+        "fields": "title,summary,recommendation,category,priority,rank",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1.3,
       "position": [
-        1360,
-        128
+        1936,
+        -240
       ],
-      "id": "9ac243db-a8d0-4744-999f-cb14c9fa24d1",
-      "name": "Structured Output Parser"
+      "id": "91248693-c482-41df-8b02-099b95f01ffc",
+      "name": "Insert documents",
+      "credentials": {
+        "mongoDb": {
+          "id": "MbUVXiGJsrpRigCp",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "collection": "AIInsight"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.3,
+      "position": [
+        -688,
+        -368
+      ],
+      "id": "4c406bd6-4a59-4ef7-a997-1033dd41a3a0",
+      "name": "Delete documents",
+      "credentials": {
+        "mongoDb": {
+          "id": "MbUVXiGJsrpRigCp",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "AIInsight",
+        "query": "[{\"$match\":{\"createdAt\":{\"$exists\":false}}},{\"$set\":{\"createdAt\":\"$$NOW\"}},{\"$merge\":{\"into\":\"AIInsight\",\"whenMatched\":\"merge\"}}]"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.3,
+      "position": [
+        2144,
+        -240
+      ],
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "Set createdAt",
+      "credentials": {
+        "mongoDb": {
+          "id": "MbUVXiGJsrpRigCp",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const insights = $input.all().map(item => ({\n  title: item.json.title,\n  summary: item.json.summary,\n  recommendation: item.json.recommendation,\n  category: item.json.category,\n  priority: item.json.priority\n}));\n\nreturn [{\n  json: {\n    insights\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1856,
+        48
+      ],
+      "id": "13433da7-5470-4478-b2da-d96b9076a734",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ JSON.stringify($json, null, 2) }}",
+        "options": {
+          "systemMessage": "คุณคือผู้เชี่ยวชาญด้านการตลาดสำหรับธุรกิจท้องถิ่น\n\nจาก insights ที่ได้รับ\n\nให้สร้างแคมเปญการตลาดที่สามารถนำไปใช้งานจริงได้\n\nสำหรับแต่ละ insight\n\nสร้าง\n\n- title\n- description\n- caption\n- couponText\n- status\n\nตอบกลับเฉพาะ JSON\n\n{\n  \"campaigns\": [\n    {\n      \"title\": \"\",\n      \"description\": \"\",\n      \"caption\": \"\",\n      \"couponText\": \"\",\n      \"status\": \"draft\"\n    }\n  ]\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2112,
+        48
+      ],
+      "id": "428f793e-25b2-4ee7-addc-0890ea109a46",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-2.5-flash-lite",
+        "options": {
+          "maxTokens": 1500
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2032,
+        288
+      ],
+      "id": "7969e437-bd2a-4bf4-9a14-98c41e57eb99",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "ogw6G2U53CJhY4qw",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let text = $json.output;\n\ntext = text\n  .replace(/^```json\\s*/i, '')\n  .replace(/\\s*```$/i, '')\n  .trim();\n\nconst data = JSON.parse(text);\n\nreturn data.campaigns.map(campaign => ({\n  json: {\n    title: campaign.title || '',\n    description: campaign.description || '',\n    caption: campaign.caption || '',\n    couponText: campaign.couponText || '',\n    status: campaign.status || 'draft',\n    //createdAt: new Date().toISOString()\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2480,
+        48
+      ],
+      "id": "dcae510f-fbb2-45c9-b94d-039c8f9e9f59",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "Campaign",
+        "fields": "title,description,caption,couponText,status",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.3,
+      "position": [
+        2688,
+        48
+      ],
+      "id": "24a0f222-c1b7-4efd-87b9-3f0006fcc98b",
+      "name": "Insert documents1",
+      "credentials": {
+        "mongoDb": {
+          "id": "MbUVXiGJsrpRigCp",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "Campaign",
+        "query": "[{\"$match\":{\"createdAt\":{\"$exists\":false}}},{\"$set\":{\"createdAt\":\"$$NOW\",\"updatedAt\":\"$$NOW\"}},{\"$merge\":{\"into\":\"Campaign\",\"whenMatched\":\"merge\"}}]"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.3,
+      "position": [
+        2912,
+        48
+      ],
+      "id": "c7f40810-6315-4f56-a308-16e5c87ae7f4",
+      "name": "Set createdAt1",
+      "credentials": {
+        "mongoDb": {
+          "id": "MbUVXiGJsrpRigCp",
+          "name": "MongoDB account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -286,8 +457,106 @@
         ]
       ]
     },
-    "Structured Output Parser": {
-      "ai_outputParser": [
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Insert documents",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert documents": {
+      "main": [
+        [
+          {
+            "node": "Set createdAt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Insert documents1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert documents1": {
+      "main": [
+        [
+          {
+            "node": "Set createdAt1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set createdAt1": {
+      "main": [
+        []
+      ]
+    },
+    "Set createdAt": {
+      "main": [
         []
       ]
     }
@@ -297,7 +566,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "88060b7c-ece4-4f92-a6d4-92382bda0004",
+  "versionId": "9ec87f5d-1c95-4df0-9d22-19c2438f186e",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "cf81b7148d16d6e07a79b947e5ebd92571d983941495247927cd17f0aad7846b"
