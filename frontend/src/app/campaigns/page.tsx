@@ -5,7 +5,13 @@ import CampaignList from '@/features/campaigns/CampaignList';
 import { useCampaigns, useUpdateCampaignStatus } from '@/hooks/useCampaigns';
 
 export default function CampaignsPage() {
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  });
   const { data, error, isLoading } = useCampaigns(1, 20, selectedDate);
   const updateStatus = useUpdateCampaignStatus();
 
