@@ -8,9 +8,10 @@ COPY prisma/ ./prisma/
 
 # Install dependencies
 RUN npm install
+RUN npm install prisma@5.22.0 @prisma/client@5.22.0
 
 # Generate Prisma Client
-RUN npx prisma generate
+RUN npx prisma@5.22.0 generate
 
 # Copy the rest of the application
 COPY scraper/ .

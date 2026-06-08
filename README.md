@@ -344,19 +344,21 @@ docker compose logs -f frontend
 
 ### 1. ติดตั้ง Dependencies
 
+> ⚠️ **สำคัญ**: ต้องรัน `npm install` ที่ Root Directory ก่อน เพื่อติดตั้ง Prisma Client แบบรวมศูนย์ (Centralized) ให้ทั้ง Backend และ Scraper ใช้งานร่วมกัน
+
 ```bash
-# Root (Prisma)
+# 1. Root (ติดตั้ง Prisma Client กลาง)
 npm install
 
-# Backend
+# 2. Backend
 cd backend
 npm install
 
-# Frontend
+# 3. Frontend
 cd ../frontend
 npm install
 
-# Scraper (ถ้าต้องการ)
+# 4. Scraper (ถ้าต้องการ)
 cd ../scraper
 npm install
 ```
