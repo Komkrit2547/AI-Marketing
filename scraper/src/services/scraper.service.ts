@@ -4,7 +4,7 @@ import { cleanText, normalizeContent, detectTruncated } from '../utils/textClean
 import { generateHash } from '../utils/hashGenerator';
 
 export class ScraperService {
-  async runScraper(groupId: string, groupName: string, targetPosts: number = 20, maxScrolls: number = 10) {
+  async runScraper(groupId: string, groupName: string, targetPosts: number = 20) {
     console.log(`Starting scrape for group: ${groupName} (${groupId})`);
 
     let postsFound = 0;
@@ -14,7 +14,7 @@ export class ScraperService {
     try {
       await facebookService.init(false);
 
-      const scrapedData = await facebookService.scrapeGroup(groupId, maxScrolls);
+      const scrapedData = await facebookService.scrapeGroup(groupId, targetPosts);
       postsFound = scrapedData.length;
 
       console.log(`Found ${postsFound} posts. Processing (target: ${targetPosts} new posts)...`);

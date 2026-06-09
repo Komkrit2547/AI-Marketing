@@ -4,6 +4,14 @@ import path from 'path';
 
 const SESSION_FILE = path.join(__dirname, '../../facebook-session.json');
 
+// ========== Browser Fingerprint ==========
+// ใช้ User-Agent เดียวกันทั้ง login และ scrape
+// เพื่อไม่ให้ Facebook สงสัยว่า session ถูกใช้จากคนละเครื่อง
+const BROWSER_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+const BROWSER_LOCALE = 'th-TH';
+const BROWSER_TIMEZONE = 'Asia/Bangkok';
+// ==========================================
+
 export interface ScrapedPost {
   postId?: string;
   postUrl?: string;
@@ -24,20 +32,55 @@ export class FacebookService {
   private page: Page | null = null;
 
   async init(headed: boolean = false) {
-    this.browser = await chromium.launch({ headless: !headed });
-
-    if (fs.existsSync(SESSION_FILE) && !headed) {
-      this.context = await this.browser.newContext({
-        storageState: SESSION_FILE,
-        viewport: { width: 1280, height: 720 }
+    if (headed) {
+      // โหมด Login: ใช้ Chrome จริง + ซ่อนสัญญาณ automation ทั้งหมด
+      // เพื่อหลีกเลี่ยง reCAPTCHA ที่ Facebook ใช้ตรวจจับบอท
+      this.browser = await chromium.launch({
+        headless: false,
+        channel: 'chrome',
+        // ลบ --enable-automation flag ที่ทำให้ navigator.webdriver = true
+        ignoreDefaultArgs: ['--enable-automation'],
+        args: [
+          '--disable-blink-features=AutomationControlled',
+          '--disable-infobars',
+          '--no-first-run',
+        ],
       });
     } else {
-      this.context = await this.browser.newContext({
-        viewport: { width: 1280, height: 720 }
+      // โหมด Scraping: ใช้ Playwright Chromium (ทำงานใน Docker ได้)
+      this.browser = await chromium.launch({
+        headless: true,
+        args: ['--disable-blink-features=AutomationControlled'],
       });
     }
 
+    const contextOptions = {
+      viewport: { width: 1280, height: 720 },
+      userAgent: BROWSER_USER_AGENT,
+      locale: BROWSER_LOCALE,
+      timezoneId: BROWSER_TIMEZONE,
+    };
+
+    if (fs.existsSync(SESSION_FILE) && !headed) {
+      this.context = await this.browser.newContext({
+        ...contextOptions,
+        storageState: SESSION_FILE,
+      });
+    } else {
+      this.context = await this.browser.newContext(contextOptions);
+    }
+
     this.page = await this.context.newPage();
+
+    // ซ่อน navigator.webdriver ทั้งโหมด login และ scrape
+    await this.page.addInitScript(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+    });
+
+    // โหมด Login: ตั้ง timeout ไม่จำกัดเพื่อให้ผู้ใช้มีเวลา login เพียงพอ
+    if (headed) {
+      this.page.setDefaultTimeout(0);
+    }
   }
 
   async loginAndSaveSession() {
@@ -47,13 +90,65 @@ export class FacebookService {
     await this.page.goto('https://www.facebook.com/');
 
     console.log("Please login manually in the opened browser window.");
-    console.log("Waiting for successful login (navigating to home feed)...");
+    console.log("After login, we will wait for the home feed to fully load...\n");
 
-    await this.page.waitForNavigation({ timeout: 0 });
+    // รอจนกว่า c_user cookie จะถูกสร้าง (= ล็อกอินสำเร็จจริง)
+    // timeout: 0 = รอได้ไม่จำกัดเวลา
+    await this.page.waitForFunction(() => {
+      return document.cookie.includes('c_user');
+    }, { timeout: 0, polling: 2000 });
 
-    console.log("Login detected! Saving session...");
+    // รอเพิ่มอีก 5 วินาทีให้ Facebook set cookie อื่นๆ ให้ครบ
+    console.log("Login detected! Waiting for cookies to stabilize...");
+    await this.page.waitForTimeout(5000);
+
+    console.log("Saving session...");
     await this.context.storageState({ path: SESSION_FILE });
-    console.log(`Session saved to ${SESSION_FILE}`);
+
+    // ตรวจสอบว่า session มี cookie ที่จำเป็นครบ
+    const cookies = await this.context.cookies();
+    const cookieNames = cookies.map(c => c.name);
+    const required = ['c_user', 'xs', 'datr'];
+    const missing = required.filter(n => !cookieNames.includes(n));
+
+    if (missing.length > 0) {
+      console.warn(`⚠️  WARNING: Missing critical cookies: ${missing.join(', ')}`);
+      console.warn(`   Session may not work for scraping.`);
+    } else {
+      console.log(`✅ Session saved with all critical cookies (${cookies.length} total)`);
+    }
+    console.log(`   File: ${SESSION_FILE}`);
+  }
+
+  /**
+   * Validate that the current session is still logged in.
+   */
+  async validateSession(): Promise<boolean> {
+    if (!this.page) throw new Error("Browser not initialized");
+
+    console.log('🔍 Validating Facebook session...');
+    await this.page.goto('https://www.facebook.com/', {
+      waitUntil: 'domcontentloaded', timeout: 30000,
+    });
+    await this.page.waitForTimeout(3000);
+
+    // ตรวจสอบว่ายังล็อกอินอยู่
+    const isLoggedIn = await this.page.evaluate(() => {
+      // ถ้ามีฟอร์มล็อกอิน = ยังไม่ได้ล็อกอิน
+      const loginForm = document.querySelector('form[action*="login"]');
+      if (loginForm) return false;
+      // ถ้ามี navigation bar ของผู้ใช้ = ล็อกอินอยู่
+      const nav = document.querySelector('[role="navigation"]');
+      return !!nav;
+    });
+
+    if (!isLoggedIn) {
+      console.error('❌ Session expired! Please run: npm run init-login');
+      return false;
+    }
+
+    console.log('✅ Session is valid');
+    return true;
   }
 
   /**
@@ -409,7 +504,39 @@ export class FacebookService {
     return postsMap;
   }
 
-  async scrapeGroup(groupId: string, scrolls: number = 5): Promise<ScrapedPost[]> {
+  /**
+   * Random delay to mimic human behavior.
+   */
+  private async randomDelay(minMs: number, maxMs: number): Promise<void> {
+    const delay = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
+    await this.page!.waitForTimeout(delay);
+  }
+
+  /**
+   * Scroll the page using randomized human-like methods.
+   */
+  private async humanScroll(page: Page): Promise<void> {
+    const method = Math.random();
+    if (method < 0.4) {
+      // วิธีที่ 1: Mouse wheel (เหมือนเลื่อน scroll wheel)
+      await page.mouse.wheel(0, Math.floor(800 + Math.random() * 1200));
+    } else if (method < 0.7) {
+      // วิธีที่ 2: กดปุ่ม End (เหมือนกดคีย์บอร์ด)
+      await page.keyboard.press('End');
+    } else {
+      // วิธีที่ 3: Scroll ไปที่ element สุดท้ายใน feed
+      await page.evaluate(() => {
+        const feed = document.querySelector('[role="feed"]');
+        if (feed && feed.lastElementChild) {
+          feed.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          window.scrollTo(0, document.body.scrollHeight);
+        }
+      });
+    }
+  }
+
+  async scrapeGroup(groupId: string, targetPosts: number = 20, maxScrolls: number = 40): Promise<ScrapedPost[]> {
     if (!this.page || !this.context) throw new Error("Browser not initialized");
 
     const groupUrl = `https://www.facebook.com/groups/${groupId}`;
@@ -428,26 +555,44 @@ export class FacebookService {
       console.warn("Feed selector not found within timeout. Attempting to proceed anyway...");
     }
 
-    // Stage 1: Scroll feed and collect post URLs
+    // Stage 1: Adaptive scrolling จนกว่าจะได้ URL เพียงพอ
     const allPostsMap = new Map<string, { previewContent: string; url: string }>();
+    let scrollCount = 0;
+    let staleCount = 0;
+    const targetUrls = targetPosts + 5; // เผื่อ buffer สำหรับโพสต์ที่ถูก skip
 
-    console.log(`Stage 1: Scrolling ${scrolls} times to collect post URLs...`);
-    for (let i = 0; i < scrolls; i++) {
+    console.log(`Stage 1: Collecting at least ${targetUrls} post URLs (target: ${targetPosts} posts)...`);
+
+    while (allPostsMap.size < targetUrls && scrollCount < maxScrolls) {
+      const prevSize = allPostsMap.size;
+
       const currentPosts = await this.extractPostUrlsFromFeed(this.page);
-
       for (const [key, post] of currentPosts) {
         if (!allPostsMap.has(key)) {
           allPostsMap.set(key, post);
         }
       }
 
-      console.log(`  Scroll ${i + 1}/${scrolls} - ${allPostsMap.size} unique post URLs found`);
+      scrollCount++;
+      console.log(`  Scroll ${scrollCount} - ${allPostsMap.size} unique URLs (target: ${targetUrls})`);
 
-      await this.page.evaluate(() => window.scrollBy(0, window.innerHeight * 2));
-      await this.page.waitForTimeout(2500);
+      // Stale detection: ถ้าเลื่อน 3 ครั้งแล้ว URL ไม่เพิ่ม = feed หมดแล้ว
+      if (allPostsMap.size === prevSize) {
+        staleCount++;
+        if (staleCount >= 3) {
+          console.log(`  ⚠️ No new posts after ${staleCount} consecutive scrolls. Feed may be exhausted.`);
+          break;
+        }
+      } else {
+        staleCount = 0;
+      }
+
+      // Human-like scroll + random delay
+      await this.humanScroll(this.page);
+      await this.randomDelay(2000, 5000);
     }
 
-    console.log(`Stage 1 complete. ${allPostsMap.size} unique post URLs collected.`);
+    console.log(`Stage 1 complete. ${allPostsMap.size} URLs collected after ${scrollCount} scrolls.`);
 
     // Stage 2: Open each post in a NEW TAB and extract full content
     const scrapedPosts: ScrapedPost[] = [];
@@ -497,6 +642,9 @@ export class FacebookService {
         shareCount,
         postedAt: new Date()
       });
+
+      // หน่วงเวลาระหว่างแต่ละโพสต์เพื่อลด rate limiting
+      await this.randomDelay(1000, 2000);
     }
 
     console.log(`Stage 2 complete. ${scrapedPosts.length} posts processed with full content extraction.`);

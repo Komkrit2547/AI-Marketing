@@ -271,7 +271,6 @@ N8N_HOST=http://localhost:5678
 ```env
 # backend/.env
 DATABASE_URL=mongodb://mongodb:27017/ai_marketing
-OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxx
 PORT=4000
 ```
 
@@ -415,7 +414,7 @@ npm run dev
 > 
 > ความแตกต่างของการตั้งค่า Connection String:
 > - **`DATABASE_URL=mongodb://mongodb:27017/ai_marketing`**: ใช้เมื่อคุณรันแอปพลิเคชันผ่าน **Docker (เช่น docker-compose)** เนื่องจากระบบเน็ตเวิร์คของ Docker จะทำการจำลองชื่อคอนเทนเนอร์ `mongodb` ให้เป็น IP Address ภายในได้
-> - **`mongodb://localhost:27017/ai_marketing?replicaSet=rs0`**: ใช้เมื่อคุณรันโปรแกรมหรือคำสั่งต่างๆ **บนเครื่อง Local (เช่น Windows/Mac) โดยตรง** (เช่น รัน `npm run dev`, `npx prisma db push`) โดยจำเป็นต้องเติม `?replicaSet=rs0` ต่อท้ายเสมอ เนื่องจาก Prisma บังคับใช้ MongoDB ในโหมด Replica Set
+> - **`DATABASE_URL="mongodb://localhost:27017/ai_marketing?replicaSet=rs0"`**: ใช้เมื่อคุณรันโปรแกรมหรือคำสั่งต่างๆ **บนเครื่อง Local (เช่น Windows/Mac) โดยตรง** (เช่น รัน `npm run dev`, `npx prisma db push`) โดยจำเป็นต้องเติม `?replicaSet=rs0` ต่อท้ายเสมอ เนื่องจาก Prisma บังคับใช้ MongoDB ในโหมด Replica Set
 >
 > ⚠️ **ข้อควรระวัง:** หากใช้คำว่า `localhost` ภายใน Docker มันจะหมายถึงตัวคอนเทนเนอร์เอง ไม่ใช่ฐานข้อมูล ดังนั้นควรแยก `.env` ของ Local ออกจากการตั้งค่าใน `docker-compose.yml` ให้ชัดเจน
 

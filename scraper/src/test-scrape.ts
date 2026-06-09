@@ -14,7 +14,6 @@ const GROUPS = [
 ];
 
 const TARGET_POSTS_PER_GROUP = 20;
-const MAX_SCROLLS = 10;
 // ==========================================
 
 async function testScrape() {
@@ -22,8 +21,18 @@ async function testScrape() {
   console.log(`🚀 Starting Scraper Test`);
   console.log(`   Groups: ${GROUPS.length}`);
   console.log(`   Target: ${TARGET_POSTS_PER_GROUP} posts per group`);
-  console.log(`   Max scrolls: ${MAX_SCROLLS}`);
   console.log(`${'='.repeat(60)}\n`);
+
+  // ตรวจสอบ session ก่อนเริ่ม scrape (ทำครั้งเดียว)
+  console.log('🔐 Checking Facebook session...');
+  await facebookService.init(false);
+  const isValid = await facebookService.validateSession();
+  await facebookService.close();
+  if (!isValid) {
+    console.error('\n❌ Please run: npm run init-login');
+    process.exit(1);
+  }
+  console.log('');
 
   let totalInserted = 0;
   let totalSkipped = 0;
@@ -38,7 +47,7 @@ async function testScrape() {
       console.log('🌐 Opening Browser...');
       await facebookService.init(false);
 
-      const scrapedPosts = await facebookService.scrapeGroup(group.id, MAX_SCROLLS);
+      const scrapedPosts = await facebookService.scrapeGroup(group.id, TARGET_POSTS_PER_GROUP);
       totalFound += scrapedPosts.length;
       console.log(`\n📊 Posts found: ${scrapedPosts.length}`);
 

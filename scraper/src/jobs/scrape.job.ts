@@ -13,12 +13,11 @@ const GROUPS = [
 ];
 
 const TARGET_POSTS_PER_GROUP = 20;
-const MAX_SCROLLS = 10;
 // ==========================================
 
 async function runWithRetry(groupId: string, groupName: string, attempt: number = 0) {
   try {
-    await scraperService.runScraper(groupId, groupName, TARGET_POSTS_PER_GROUP, MAX_SCROLLS);
+    await scraperService.runScraper(groupId, groupName, TARGET_POSTS_PER_GROUP);
   } catch (error) {
     if (attempt < RETRY_DELAYS.length) {
       const delay = RETRY_DELAYS[attempt];
