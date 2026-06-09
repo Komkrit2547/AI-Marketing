@@ -20,7 +20,7 @@ export default function CampaignsPage() {
       <div className="text-red-500">
         Error loading campaigns
       </div>
-    );
+    ); 
   }
 
   const campaigns = data?.data ?? [];
