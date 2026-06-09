@@ -3,7 +3,6 @@ WORKDIR /app
 COPY package.json tsconfig.json next.config.js tailwind.config.ts postcss.config.js ./
 RUN npm install
 COPY src/ ./src/
-COPY public/ ./public/
 RUN npm run build
 
 FROM node:20-alpine AS runner
