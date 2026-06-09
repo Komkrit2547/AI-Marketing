@@ -64,113 +64,57 @@ export default function CampaignList({
     );
   }
 
-  // return (
-  //   <div className = "space-y-6">
-  //     {campaigns.map((item) => {
-  //       const theme = 
-  //       cardThemes[item.status] ||
-  //       cardThemes.draft;
+  return (
+    <div className="space-y-6">
+      {campaigns.map((item) => {
+        const theme = cardThemes[item.status] || cardThemes.default;
 
-  //     return (
-  //       <div key = {item.id} className="bg-white rounded-[32px] overflow-hidden border border-[#E8EDF5] shadow-sm">
-  //         <div className={`h-2 bg-gradient-to-r ${theme.topBar}`}/>
-  //         <div className="p-8">
-  //           <div className="flex items-center gap-4 mb-6">
-  //             <div></div>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     )
-  //     }
-    //     <div key = {item.id} className="bg-[#F8F6EF] border border-gray-300 rounded-[20px] p-4">
-    //       <div className="flex items-center justify-between mb-2">
-    //         <h3 className="font-semibold text-[#434553]">{item.title}</h3>
-    //         <span 
-    //           className={`text-xs px-2 py-1 rounded-full font-medium ${
-    //           statusColors[item.status] || 'bg-gray-100'
-    //           }`}
-    //         > 
-    //           {item.title}
-    //         </span>
-    //       </div>
+        return (
+          <div key={item.id} className="bg-[#F8F6EF] border border-gray-300 rounded-[20px] p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-[#434553]">{item.title}</h3>
+              <span 
+                className="text-xs px-2 py-1 rounded-full font-medium bg-gray-100 text-gray-700"
+              > 
+                {item.status}
+              </span>
+            </div>
 
-    //       {item.description && (
-    //         <p className="text-sm text-gray-600">
-    //           {item.description}
-    //         </p>
-    //       )}
+            {item.description && (
+              <p className="text-sm text-gray-600">
+                {item.description}
+              </p>
+            )}
 
-    //       {item.caption && (
-    //         <div className="mt-2 bg-gray-50 rounded p-2">
-    //           <p className="text-sm italic text-gray-600">
-    //             "{item.caption}"
-    //           </p>
-    //         </div>
-    //       )}
+            {item.caption && (
+              <div className="mt-2 bg-gray-50 rounded p-2">
+                <p className="text-sm italic text-gray-600">
+                  "{item.caption}"
+                </p>
+              </div>
+            )}
 
-    //       {item.couponText && (
-    //         <div className="mt-2 bg-gray-50 rounded p-2">
-    //           <p className="text-sm text-purple-700 font-medium">
-    //             Coupon: {item.couponText}
-    //           </p>
-    //         </div>
-    //       )}
-    //       {onAction && (
-    //         <button
-    //           className="mt-2 px-4 py-2 bg-[#F8B23D] hover:bg-[#F0A72D] text-[#434553] font-medium rounded-lg flex items-center gap-1"
-    //           onClick={() => onAction(item.id)}
-    //         >
-    //           <span className="material-symbols-outlined text-[18px]">
-    //             arrow_forward
-    //           </span>
-    //           {actionLabel ?? 'Action'}
-    //         </button>
-    //       )}
-        
-    //     </div>
-    //   ))}
-    // </div>
-  // );
+            {item.couponText && (
+              <div className="mt-2 bg-gray-50 rounded p-2">
+                <p className="text-sm text-purple-700 font-medium">
+                  Coupon: {item.couponText}
+                </p>
+              </div>
+            )}
+            {onAction && (
+              <button
+                className="mt-2 px-4 py-2 bg-[#F8B23D] hover:bg-[#F0A72D] text-[#434553] font-medium rounded-lg flex items-center gap-1 w-fit"
+                onClick={() => onAction(item.id)}
+              >
+                {actionLabel ?? 'Action'}
+                <span className="material-symbols-outlined text-[18px]">
+                  arrow_forward
+                </span>
+              </button>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
-  // const { data, isLoading, error } = useCampaigns();
-
-  // if (isLoading) return <div className="text-gray-500">Loading campaigns...</div>;
-  // if (error) return <div className="text-red-500">Error loading campaigns</div>;
-
-  // const campaigns = data?.data ?? [];
-
-  // return (
-  //   <div className="space-y-4">
-  //     {campaigns.length === 0 && (
-  //       <p className="text-gray-500">No campaigns yet.</p>
-  //     )}
-  //     {campaigns.map((item) => (
-  //       <div key={item.id} className="bg-white rounded-lg shadow p-4">
-  //         <div className="flex items-center justify-between mb-2">
-  //           <h3 className="font-semibold text-gray-900">{item.title}</h3>
-  //           <span
-  //             className={`text-xs px-2 py-1 rounded-full font-medium ${
-  //               statusColors[item.status] || 'bg-gray-100'
-  //             }`}
-  //           >
-  //             {item.status}
-  //           </span>
-  //         </div>
-  //         {item.description && (
-  //           <p className="text-gray-700 text-sm">{item.description}</p>
-  //         )}
-  //         {item.caption && (
-  //           <div className="mt-2 bg-gray-50 rounded p-2">
-  //             <p className="text-sm text-gray-600 italic">&ldquo;{item.caption}&rdquo;</p>
-  //           </div>
-  //         )}
-  //         {item.couponText && (
-  //           <div className="mt-2 bg-purple-50 rounded p-2">
-  //             <p className="text-sm text-purple-700 font-medium">Coupon: {item.couponText}</p>
-  //           </div>
-  //         )}
-  //       </div>
-  //     ))}
-  //   </div>
-  // );
-// }

@@ -510,6 +510,10 @@ Backend API ทำงานที่ `http://localhost:4000/api`
 | **AI Analysis** | `n8n/workflows/AI.json` | วิเคราะห์ข้อมูลชุมชนด้วย AI แล้วสร้าง Insights |
 | **News & Weather** | `n8n/workflows/news-weather-workflow.json` | ดึงข่าวสารและสภาพอากาศเข้าระบบ |
 
+### การตั้งค่า Credential MongoDB account ครั้งแรก
+`Connection String` = `mongodb://mongodb:27017/?replicaSet=rs0`;
+`Database` = `ai_marketing`
+
 เข้าถึง n8n ได้ที่ http://localhost:5678
 
 ---
