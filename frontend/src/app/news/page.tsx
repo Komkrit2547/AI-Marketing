@@ -43,8 +43,8 @@ export default function NewsPage() {
           />
         </div>
 
-        <div className="flex items-center gap-3 bg-white border border-[#E5E7EB] rounded-[20px] px-4 py-3 shadow-sm">
-          <span className="material-symbols-outlined text-[#434553]">
+        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm">
+          <span className="material-symbols-outlined text-[#FBBF24] text-xl">
             location_on
           </span>
 

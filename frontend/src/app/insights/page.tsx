@@ -32,8 +32,8 @@ export default function InsightsPage() {
 
         <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm">
           <span className="material-symbols-outlined text-[#FBBF24] text-xl">
-  location_on
-</span>
+            location_on
+          </span>
           <select
             value={selectedArea}
             onChange={(e) => setSelectedArea(e.target.value)}
@@ -51,7 +51,7 @@ export default function InsightsPage() {
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="bg-[#FCD34D] w-10 h-10 rounded-full flex items-center justify-center">
-               <span className="material-symbols-outlined text-gray-800">store</span>
+              <span className="material-symbols-outlined text-gray-800">store</span>
             </div>
             <h2 className="text-xl font-bold text-gray-800">
               ร้านค้าในพื้นที่
@@ -77,7 +77,7 @@ export default function InsightsPage() {
             </div>
           </div>
         </div>
-        
+
         <InsightList
           selectedDate={selectedDate}
           selectedArea={selectedArea}

@@ -59,8 +59,8 @@ export default function NewsList({
           {/* Weather */}
           <div className="bg-white border border-[#E8EDF5] rounded-[32px] shadow-sm overflow-hidden flex-1 flex flex-col">
             <div className="flex items-center gap-4 px-8 py-7 border-b border-[#EEF2F7]">
-              <div className="w-14 h-14 rounded-full bg-[#F7EED9] flex items-center justify-center">
-                <span className="material-symbols-outlined text-[#2D2D2D]">
+              <div className="w-14 h-14 rounded-full bg-[#FCD34D] flex items-center justify-center">
+                <span className="material-symbols-outlined text-gray-800">
                   partly_cloudy_day
                 </span>
               </div>
@@ -116,8 +116,8 @@ export default function NewsList({
         <div className="col-span-12 xl:col-span-8 flex flex-col">
           <div className="bg-white border border-[#E8EDF5] rounded-[32px] shadow-sm overflow-hidden flex-1">
             <div className="flex items-center gap-4 px-8 py-7 border-b border-[#EEF2F7]">
-              <div className="w-14 h-14 rounded-full bg-[#F7EED9] flex items-center justify-center">
-                <span className="material-symbols-outlined text-[#8B1E12]">
+              <div className="w-14 h-14 rounded-full bg-[#FCD34D] flex items-center justify-center">
+                <span className="material-symbols-outlined text-gray-800">
                   local_fire_department
                 </span>
               </div>
