@@ -18,8 +18,8 @@ export default function Sidebar() {
   return (
     <aside
       className={`
-        ${sidebarOpen ? 'w-72' : 'w-24'}
-        bg-[#262626] 
+        ${sidebarOpen ? 'w-72' : 'w-20'}
+        bg-[#262626]  
         border-r
         border-[#303030] 
         flex
@@ -29,7 +29,7 @@ export default function Sidebar() {
       `}
     >
       <div
-        className={`
+        className={` 
           py-6
           ${sidebarOpen
             ? 'px-7'
@@ -84,8 +84,8 @@ export default function Sidebar() {
       <nav
         className={`
           flex-1
-          mt-6
-          space-y-8
+          mt-4
+          space-y-2
 
           ${sidebarOpen
             ? 'px-7'
@@ -105,16 +105,17 @@ export default function Sidebar() {
                 ${sidebarOpen
                   ? `
                       gap-4
-                      px-5
-                      py-4
+                      pl-6
+                      pr-5
+                      py-3
                       rounded-[24px]
                     `
                   : `
                       w-[58px]
-                      h-[72px]
+                      h-[58px]
                       mx-auto
                       justify-center
-                      rounded-[28px]
+                      rounded-[20px]
                     `
                 }
                 ${isActive
@@ -137,7 +138,7 @@ export default function Sidebar() {
               </span>
 
               {sidebarOpen && (
-                <span className="text-[18px] font-medium">
+                <span className="text-[18px] font-medium text-left flex-1">
                   {item.label}
                 </span>
               )}
