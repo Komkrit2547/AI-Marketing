@@ -14,44 +14,24 @@ export default function NewsPage() {
   });
   const [selectedArea, setSelectedArea] = useState('');
 
-  // // const {data,isLoading,error,} = useNews(selectedDate);
-  // // const weather = data?.weather;
-  // // const trends = data?.trends ?? [];
-  // // const news = data?.news ?? []; Backend มาแล้วค่อยใช้
-
-  // // Placeholder รอ Backend
-  // const weather = null;
-
-  // const trends: {
-  //   keyword: string;
-  //   count: number;
-  // }[] = [];
-
-  // const news: {
-  //   id: number;
-  //   titel: string;
-  //   source?: string;
-  //   date?: string;
-  // }[] = [];
-
 
   return (
     <div className="space-y-8">
 
       <div>
-        <h2 className="text-3xl font-bold text-[#434553]">
+        <h2 className="text-4xl font-bold text-[#FBBF24] mb-2">
           Local Trends
         </h2>
 
-        <p className="text-gray-500 mt-1">
+        <p className="text-[#fff]-500 mt-1">
           วิเคราะห์เทรนด์และข่าวสารในพื้นที่
         </p>
       </div>
 
       <div className="flex flex-wrap gap-4">
 
-        <div className="flex items-center gap-3 bg-[#F8F6EF] border border-gray-300 rounded-lg px-4 py-3 w-fit">
-          <span className="material-symbols-outlined text-[#434553]">
+        <div className="flex items-center gap-4 bg-white rounded-[24px] px-6 py-4 shadow-sm border border-[#E8EDF5] w-fit">
+          <span className="material-symbols-outlined text-[#FBBF24]">
             calendar_month
           </span>
 
@@ -63,7 +43,7 @@ export default function NewsPage() {
           />
         </div>
 
-        <div className="flex items-center gap-3 bg-[#F8F6EF] border border-gray-300 rounded-lg px-4 py-3">
+        <div className="flex items-center gap-3 bg-white border border-[#E5E7EB] rounded-[20px] px-4 py-3 shadow-sm">
           <span className="material-symbols-outlined text-[#434553]">
             location_on
           </span>
@@ -78,8 +58,8 @@ export default function NewsPage() {
         </div>
       </div>
 
-      <NewsList 
-        selectedDate = {selectedDate}
+      <NewsList
+        selectedDate={selectedDate}
         selectedArea={selectedArea}
       />
     </div>
