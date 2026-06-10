@@ -1,9 +1,5 @@
 'use client';
 
-import { useNews } from '@/hooks/useNews';
-import { useInsights } from '@/hooks/useInsights';
-import { useCampaigns } from '@/hooks/useCampaigns';
-
 import Link from 'next/link';
 
 type DashboardStatsProps = {
@@ -74,17 +70,20 @@ export default function DashboardStats({
   // ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {stats.map((stat) => {
         const card = (
           <div
             className={`
-              bg-[#F8F6EF]
-              border border-gray-300
-              rounded-[24px]
-              p-6
+              bg-white
+              border border-gray-200
+              rounded-[20px]
+              p-5
               transition-all
-              duration-200 
+              duration-200
+              h-full
+              flex flex-col justify-between
+              group
               ${
                 stat.href
                   ? 'cursor-pointer hover:shadow-lg hover:-translate-y-1'
@@ -92,19 +91,18 @@ export default function DashboardStats({
               }
             `}
           >
-
-            <div className = "flex items-center justify-between">
-              <div>
-               <p className="mt-4 text-[#666] text-lg">{stat.label}</p>
-               <p className="text-4xl font-medium text-[#4A4A57]">{stat.value}</p>
-             </div>
-
-             <div className="w-14 h-14 rounded-2xl bg-[#EFE7D5] flex items-center justify-center">
-                <span className="material-symbols-outlined text-[#8B1E12] text-[28px]">
+            {/* Top row: Label + Icon */}
+            <div className="flex items-start justify-between mb-4">
+              <p className="text-[15px] text-[#888] font-medium">{stat.label}</p>
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#FFF5D1] to-[#FFDFA6] border border-[#FFE8A1] shadow-[0_4px_10px_rgba(251,191,36,0.15)] hover:from-[#FFD05B] hover:to-[#FF9D00] hover:shadow-[0_6px_16px_rgba(251,191,36,0.4)] group-hover:from-[#FFD05B] group-hover:to-[#FF9D00] group-hover:shadow-[0_6px_16px_rgba(251,191,36,0.4)] hover:border-[#FFC145] group-hover:border-[#FFC145] transition-all duration-300 flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-[#44403C] hover:text-[#27272A] group-hover:text-[#27272A] text-[22px] transition-colors duration-300">
                   {stat.icon}
                 </span>
               </div>
             </div>
+
+            {/* Number */}
+            <p className="text-4xl font-bold text-[#1F2937]">{stat.value}</p>
           </div>
         );
 

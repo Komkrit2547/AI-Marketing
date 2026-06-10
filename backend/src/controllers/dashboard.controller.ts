@@ -4,7 +4,9 @@ import { dashboardService } from '../services/dashboard.service';
 export const dashboardController = {
   async getOverview(req: Request, res: Response) {
     try {
-      const data = await dashboardService.getOverview();
+      const year = req.query.year ? parseInt(req.query.year as string, 10) : undefined;
+      const month = req.query.month ? parseInt(req.query.month as string, 10) : undefined;
+      const data = await dashboardService.getOverview({ year, month });
       res.json(data);
     } catch (error) {
       console.error('Error fetching dashboard overview:', error);

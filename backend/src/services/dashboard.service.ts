@@ -1,17 +1,40 @@
 import prisma from '../lib/prisma';
 
 export const dashboardService = {
-  async getOverview() {
+  async getOverview(params?: { year?: number; month?: number }) {
     // 1. Total shops
     const totalShops = await prisma.business.count();
 
     // 2. Current month trends (AIInsight)
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    const year = params?.year ?? now.getFullYear();
+    const month = params?.month !== undefined ? params.month - 1 : now.getMonth();
+    
+    const startOfMonth = new Date(year, month, 1);
+    const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999);
 
     const currentMonthTrends = await prisma.aIInsight.count({
       where: {
+        createdAt: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
+      },
+    });
+
+    // 2.5 Campaigns and AI Insights (Drafts) for the selected month
+    const totalMonthlyCampaigns = await prisma.campaign.count({
+      where: {
+        createdAt: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
+      },
+    });
+
+    const totalMonthlyAiInsights = await prisma.campaign.count({
+      where: {
+        status: 'draft',
         createdAt: {
           gte: startOfMonth,
           lte: endOfMonth,
@@ -45,13 +68,21 @@ export const dashboardService = {
     scoredShops.sort((a: any, b: any) => b.popularityScore - a.popularityScore);
     const topPopularShops = scoredShops.slice(0, 5);
 
-    // 4. Keyword Cloud (Top Trends/Insights from last 7 days)
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    // 4. Keyword Cloud (Top Trends/Insights from selected month)
+    let keywordsStartDate = startOfMonth;
+    let keywordsEndDate = endOfMonth;
+
+    // If no specific month was requested, fall back to last 7 days for keyword cloud to keep it fresh
+    if (params?.month === undefined) {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      keywordsStartDate = sevenDaysAgo;
+      keywordsEndDate = new Date();
+    }
 
     const recentInsights = await prisma.aIInsight.findMany({
       where: {
-        createdAt: { gte: sevenDaysAgo }
+        createdAt: { gte: keywordsStartDate, lte: keywordsEndDate }
       },
       select: { title: true },
       take: 20,
@@ -65,7 +96,9 @@ export const dashboardService = {
       totalShops,
       currentMonthTrends,
       topPopularShops,
-      keywords
+      keywords,
+      totalMonthlyCampaigns,
+      totalMonthlyAiInsights
     };
   }
 };
