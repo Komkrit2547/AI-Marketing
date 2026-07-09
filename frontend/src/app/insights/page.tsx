@@ -13,7 +13,7 @@ export default function InsightsPage() {
     <div className="space-y-6">
 
       <div className="mb-6">
-        <h1 className="text-4xl font-bold text-[#FBBF24] mb-2">Local Shop</h1>
+        <h1 className="text-4xl font-bold text-[#FBBF24] mb-2">ร้านค้าในพื้นที่</h1>
         <p className="text-[#fff]-500">สำรวจร้านค้าและธุรกิจในพื้นที่ทับสะแก</p>
       </div>
 

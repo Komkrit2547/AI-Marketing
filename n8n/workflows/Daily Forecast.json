@@ -1,0 +1,173 @@
+{
+  "name": "Daily Forecast",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const daily = $json.daily;\n\nconst thaiDays = [\n  'วันอาทิตย์',\n  'วันจันทร์',\n  'วันอังคาร',\n  'วันพุธ',\n  'วันพฤหัสบดี',\n  'วันศุกร์',\n  'วันเสาร์'\n];\n\nreturn daily.time.map((date, index) => {\n\n  const dayName = thaiDays[new Date(date).getDay()];\n\n  let weather = 'อากาศโปร่ง';\n\n  if (daily.precipitation_sum[index] >= 20) {\n    weather = 'ฝนตกหนัก';\n  } else if (daily.precipitation_sum[index] >= 5) {\n    weather = 'มีฝน';\n  } else if (daily.precipitation_sum[index] > 0) {\n    weather = 'ฝนเล็กน้อย';\n  }\n\n  return {\n    json: {\n      district: 'ทับสะแก',\n      province: 'ประจวบคีรีขันธ์',\n\n      forecastDate: new Date(date).toISOString(),\n\n      dayName,\n\n      weather,\n\n      maxTemp: daily.temperature_2m_max[index],\n      minTemp: daily.temperature_2m_min[index],\n\n      rainfall: daily.precipitation_sum[index],\n\n      source: 'open-meteo'\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        -32
+      ],
+      "id": "a39a0a88-9c18-498b-9288-5ec4dff5b557",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -928,
+        -32
+      ],
+      "id": "ffdf3b33-2585-4c22-90d7-7549f94b5dc2",
+      "name": "Schedule Trigger2"
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "11.53"
+            },
+            {
+              "name": "longitude",
+              "value": "99.62"
+            },
+            {
+              "name": "daily",
+              "value": "temperature_2m_max,temperature_2m_min,precipitation_sum"
+            },
+            {
+              "name": "timezone",
+              "value": "Asia/Bangkok"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -624,
+        -64
+      ],
+      "id": "0afedc3b-f7e8-4c75-800d-5c1e45af3416",
+      "name": "Daily Forecast"
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "WeatherForecast",
+        "query": "[{\"$match\":{\"createdAt\":{\"$exists\":false}}},{\"$set\":{\"createdAt\":\"$$NOW\",\"updatedAt\":\"$$NOW\",\"forecastDate\":{\"$toDate\":\"$forecastDate\"}}},{\"$merge\":{\"into\":\"WeatherForecast\",\"whenMatched\":\"merge\"}}]"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.3,
+      "position": [
+        288,
+        -32
+      ],
+      "id": "0e31a5e2-c968-4538-b24c-882dba724ac9",
+      "name": "Set createdAt1",
+      "credentials": {
+        "mongoDb": {
+          "id": "MbUVXiGJsrpRigCp",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "WeatherForecast",
+        "fields": "district,province,forecastDate,dayName,weather,maxTemp,minTemp,rainfall,source",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.3,
+      "position": [
+        16,
+        -32
+      ],
+      "id": "2a4d3c0d-6144-4650-96c8-363e3f8d7c62",
+      "name": "Insert documents1",
+      "credentials": {
+        "mongoDb": {
+          "id": "MbUVXiGJsrpRigCp",
+          "name": "MongoDB account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Insert documents1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger2": {
+      "main": [
+        [
+          {
+            "node": "Daily Forecast",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Forecast": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert documents1": {
+      "main": [
+        [
+          {
+            "node": "Set createdAt1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "76c8740c-35a6-44df-9991-38f697a011f2",
+  "meta": {
+    "instanceId": "cf81b7148d16d6e07a79b947e5ebd92571d983941495247927cd17f0aad7846b"
+  },
+  "id": "C3uP1IQ0BReEkJ1J",
+  "tags": []
+}

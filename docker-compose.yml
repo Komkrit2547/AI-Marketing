@@ -11,10 +11,16 @@ services:
       - ./frontend:/app
       - /app/node_modules
     command: npm run dev
+    restart: unless-stopped
     depends_on:
       - backend
     networks:
       - app-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
 
   backend:
     build:
@@ -26,11 +32,17 @@ services:
       - DATABASE_URL=mongodb://mongodb:27017/ai_marketing
       - PORT=4000
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+    restart: unless-stopped
     depends_on:
       mongodb:
-        condition: service_started
+        condition: service_healthy
     networks:
       - app-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
 
   mongodb:
     image: mongo:7
@@ -38,9 +50,8 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
-      - ./backend/database/init.js:/docker-entrypoint-initdb.d/init.js
-      - ./backend/database/fix-ai-insight-dates.js:/scripts/fix-ai-insight-dates.js
     command: ["--replSet", "rs0", "--bind_ip_all"]
+    restart: unless-stopped
     healthcheck:
       test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}) }" | mongosh --quiet
       interval: 5s
@@ -49,14 +60,20 @@ services:
       retries: 30
     networks:
       - app-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
 
   db-migration:
     image: mongo:7
     depends_on:
       mongodb:
         condition: service_healthy
-    entrypoint: ["mongosh", "mongodb://mongodb:27017/ai_marketing", "/scripts/fix-ai-insight-dates.js"]
+    entrypoint: ["/bin/sh", "-c", "mongosh mongodb://mongodb:27017/ai_marketing /scripts/init.js && mongosh mongodb://mongodb:27017/ai_marketing /scripts/fix-ai-insight-dates.js"]
     volumes:
+      - ./backend/database/init.js:/scripts/init.js
       - ./backend/database/fix-ai-insight-dates.js:/scripts/fix-ai-insight-dates.js
     networks:
       - app-network
@@ -74,10 +91,17 @@ services:
       - ./n8n/workflows:/home/node/.n8n/workflows
     entrypoint: ["tini", "--", "/bin/sh", "-c"]
     command: ["n8n import:workflow --separate --input=/home/node/.n8n/workflows || true && n8n update:workflow --all --active=true || true && n8n"]
+    restart: unless-stopped
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     networks:
       - app-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
 
   prisma-studio:
     build:
@@ -101,11 +125,17 @@ services:
       - DATABASE_URL=mongodb://mongodb:27017/ai_marketing
     volumes:
       - ./scraper/facebook-session.json:/app/facebook-session.json
+    restart: unless-stopped
     depends_on:
       mongodb:
         condition: service_healthy
     networks:
       - app-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
 
 volumes:
   mongodb_data:

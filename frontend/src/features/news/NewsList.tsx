@@ -13,9 +13,10 @@ export default function NewsList({
   selectedArea,
 }: Props) {
   const { data: newsData, isLoading: isNewsLoading } = useNews(selectedDate);
-  const { data: weatherRes, isLoading: isWeatherLoading } = useWeather();
+  const { data: weatherRes, isLoading: isWeatherLoading } = useWeather(selectedDate, selectedArea);
 
-  const weather = weatherRes?.data;
+  const currentWeather = weatherRes?.data?.current;
+  const forecast = weatherRes?.data?.forecast || [];
   const trends = newsData?.data?.trending || [];
   const news = newsData?.data?.news || [];
 
@@ -31,14 +32,15 @@ export default function NewsList({
     currentPage * itemsPerPage
   );
 
-  // TODO: Replace with forecast data from API (e.g., weatherRes?.data?.forecast)
-  const mockForecast = [
-    { id: 1, day: 'จ.', icon: 'sunny', desc: 'แดดจัด', temp: '32°' },
-    { id: 2, day: 'อ.', icon: 'partly_cloudy_day', desc: 'มีเมฆบางส่วน', temp: '33°' },
-    { id: 3, day: 'พ.', icon: 'cloudy', desc: 'มีเมฆมาก', temp: '31°' },
-    { id: 4, day: 'พฤ.', icon: 'rainy', desc: 'ฝนตก', temp: '29°' },
-    { id: 5, day: 'ศ.', icon: 'thunderstorm', desc: 'พายุฝนฟ้าคะนอง', temp: '28°' },
-  ];
+  const getWeatherIcon = (weatherText: string | undefined | null) => {
+    if (!weatherText) return 'partly_cloudy_day';
+    if (weatherText.includes('แดดจัด') || weatherText.includes('แจ่มใส')) return 'sunny';
+    if (weatherText.includes('บางส่วน')) return 'partly_cloudy_day';
+    if (weatherText.includes('เมฆมาก')) return 'cloudy';
+    if (weatherText.includes('ฟ้าคะนอง') || weatherText.includes('พายุ')) return 'thunderstorm';
+    if (weatherText.includes('ฝน')) return 'rainy';
+    return 'partly_cloudy_day';
+  };
 
   const [todayFormatted, setTodayFormatted] = useState('');
 
@@ -50,7 +52,9 @@ export default function NewsList({
       month: 'long',
       year: 'numeric'
     }));
-  }, [selectedDate]);
+    // Reset pagination when date changes
+    setCurrentPage(1);
+  }, [selectedDate, selectedArea]);
 
   return (
     <>
@@ -61,7 +65,7 @@ export default function NewsList({
             <div className="flex items-center gap-4 px-8 py-7 border-b border-[#EEF2F7]">
               <div className="w-14 h-14 rounded-full bg-[#FCD34D] flex items-center justify-center">
                 <span className="material-symbols-outlined text-gray-800">
-                  partly_cloudy_day
+                  {getWeatherIcon(currentWeather?.weather)}
                 </span>
               </div>
               <h2 className="text-2xl font-semibold text-[#262626]">
@@ -73,42 +77,61 @@ export default function NewsList({
               <div className="flex flex-1 items-center justify-center min-h-[360px]">
                 <p className="text-gray-400">Loading weather...</p>
               </div>
-            ) : weather ? (
-              <div className="flex flex-col flex-1 h-full">
-                {/* Current Weather (Top) */}
-                <div className="flex flex-col items-center justify-center flex-1 px-8 pt-8 pb-10">
-                  <p className="text-[64px] leading-none font-bold text-[#151515]">
-                    {weather.temperature ?? '--'}°
-                  </p>
-                  <p className="text-[20px] font-semibold text-[#262626] mt-5">
-                    {weather.weather ?? 'N/A'}
-                  </p>
-                  <p className="mt-5 px-5 py-2 rounded-full bg-[#F3F4F6] text-[#262626] font-medium text-sm">
-                    💧Humidity {weather.humidity ?? '--'}%
-                  </p>
-                  <p className="text-xs text-[#A0A0A0] mt-6">
-                    อัพเดทล่าสุด: {new Date(weather.createdAt).toLocaleTimeString('th-TH')}
-                  </p>
-                </div>
-
-                {/* 5-Day Forecast (Bottom) */}
-                <div className="px-8 py-6 border-t border-[#EEF2F7] bg-[#FAFAFA]">
-                  <div className="flex flex-col gap-4">
-                    {mockForecast.map((item) => (
-                      <div key={item.id} className="flex items-center text-sm font-medium text-[#262626]">
-                        <span className="w-10 text-[#A0A0A0] font-semibold">{item.day}</span>
-                        <span className="flex-1 text-left">{item.desc}</span>
-                        <span className="w-10 text-right font-semibold">{item.temp}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+            ) : (!currentWeather && forecast.length === 0) ? (
+              <div className="flex flex-1 items-center justify-center min-h-[360px]">
+                <p className="text-gray-400">ไม่มีข้อมูลสภาพอากาศสำหรับวันนี้</p>
               </div>
             ) : (
-              <div className="flex flex-1 items-center justify-center min-h-[360px]">
-                <p className="text-gray-400">No weather data available</p>
+              <div className="flex flex-col flex-1 h-full">
+                {/* Current Weather (Top) */}
+                {currentWeather ? (
+                  <div className="flex flex-col items-center justify-center flex-1 px-8 pt-8 pb-10">
+                    <p className="text-[64px] leading-none font-bold text-[#151515]">
+                      {currentWeather.temperature ?? '--'}°
+                    </p>
+                    <p className="text-[20px] font-semibold text-[#262626] mt-5 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#FCD34D]">{getWeatherIcon(currentWeather.weather)}</span>
+                      {currentWeather.weather ?? 'N/A'}
+                    </p>
+                    <p className="mt-5 px-5 py-2 rounded-full bg-[#F3F4F6] text-[#262626] font-medium text-sm">
+                      💧Humidity {currentWeather.humidity ?? '--'}%
+                    </p>
+                    <p className="text-xs text-[#A0A0A0] mt-6">
+                      อัพเดทล่าสุด: {new Date(currentWeather.recordedAt || currentWeather.createdAt).toLocaleTimeString('th-TH')}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center flex-1 px-8 pt-8 pb-10">
+                    <p className="text-gray-400">ไม่มีข้อมูลสภาพอากาศปัจจุบัน</p>
+                  </div>
+                )}
+
+                {/* 7-Day Forecast (Bottom) */}
+                {forecast.length > 0 && (
+                  <div className="px-6 py-6 border-t border-[#EEF2F7] bg-[#FAFAFA] overflow-x-auto">
+                    <div className="flex flex-row gap-3 min-w-max pb-2">
+                      {forecast.map((item: any) => (
+                        <div key={item.id} className="flex flex-col items-center justify-center p-4 rounded-[18px] bg-white border border-[#E8EDF5] w-[100px] shadow-sm hover:border-[#F4B83A] transition-colors">
+                          <span className="text-[#A0A0A0] text-sm font-semibold mb-2">
+                            {item.dayName || new Date(item.forecastDate).toLocaleDateString('th-TH', { weekday: 'short' })}
+                          </span>
+                          <span className="material-symbols-outlined text-[#FCD34D] text-[32px] mb-2">
+                            {getWeatherIcon(item.weather)}
+                          </span>
+                          <span className="text-[11px] text-[#262626] font-medium text-center mb-2 truncate w-full px-1">
+                            {item.weather || 'ไม่มีข้อมูล'}
+                          </span>
+                          <div className="text-sm font-bold text-[#262626]">
+                            {item.maxTemp ?? '--'}° <span className="text-xs text-[#A0A0A0] font-medium">/ {item.minTemp ?? '--'}°</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
+            
           </div>
         </div>
 

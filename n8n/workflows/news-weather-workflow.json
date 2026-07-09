@@ -3,25 +3,6 @@
   "nodes": [
     {
       "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "seconds"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.3,
-      "position": [
-        -144,
-        112
-      ],
-      "id": "6062256f-007f-41ef-8844-ca7bb5a44254",
-      "name": "Schedule Trigger"
-    },
-    {
-      "parameters": {
         "url": "https://api.openweathermap.org/data/2.5/weather",
         "sendQuery": true,
         "queryParameters": {
@@ -74,8 +55,8 @@
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1.3,
       "position": [
-        640,
-        160
+        -48,
+        608
       ],
       "id": "defcec1e-40af-4378-9f7c-cc4c9df4047b",
       "name": "Insert documents",
@@ -88,17 +69,279 @@
     },
     {
       "parameters": {
+        "url": "https://api.openweathermap.org/data/2.5/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "Thap Sakae,TH"
+            },
+            {
+              "name": "appid",
+              "value": "022e5e89e6c7af108ce8e95818f682d6"
+            },
+            {
+              "name": "units",
+              "value": "metric"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        768,
+        192
+      ],
+      "id": "36ea851d-8f65-4f23-9b73-0e4153ee79df",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const forecasts = $json.list;\n\nconst dailyForecasts = forecasts\n  .filter(item => item.dt_txt.includes('12:00:00'))\n  .slice(0, 5)\n  .map(item => ({\n    date: item.dt_txt.split(' ')[0],\n\n    district: 'Thap Sakae',\n    province: 'Prachuap Khiri Khan',\n\n    weather: item.weather?.[0]?.description ?? null,\n    weatherMain: item.weather?.[0]?.main ?? null,\n\n    temperature: item.main?.temp ?? null,\n    humidity: item.main?.humidity ?? null,\n    pressure: item.main?.pressure ?? null,\n\n    windSpeed: item.wind?.speed ?? null,\n\n    rainfall:\n      item.rain?.['3h'] ??\n      item.rain?.['1h'] ??\n      0,\n\n    source: 'OpenWeatherMap'\n  }));\n\nreturn dailyForecasts.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        160
+      ],
+      "id": "414061b7-c0ef-48a2-aa50-2e05650494ca",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const current = $json.current;\n\nlet weather = 'อากาศโปร่ง';\n\nif (current.rain > 0) {\n  weather = 'กำลังมีฝน';\n} else if (current.cloud_cover > 70) {\n  weather = 'เมฆมาก';\n} else if (current.cloud_cover > 30) {\n  weather = 'เมฆบางส่วน';\n}\n\nreturn [{\n  json: {\n    district: 'ทับสะแก',\n    province: 'ประจวบคีรีขันธ์',\n\n    weather,\n\n    temperature: current.temperature_2m,\n    humidity: current.relative_humidity_2m,\n\n    rainfall: current.rain,\n\n    windSpeed: current.wind_speed_10m,\n\n    source: 'open-meteo',\n\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        592
+      ],
+      "id": "30ecf345-f4ae-46d6-b228-a8f4b959b0a7",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1008,
+        560
+      ],
+      "id": "76cbd27a-e535-4760-9a7b-55811883f9b6",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const daily = $json.daily;\n\nconst thaiDays = [\n  'วันอาทิตย์',\n  'วันจันทร์',\n  'วันอังคาร',\n  'วันพุธ',\n  'วันพฤหัสบดี',\n  'วันศุกร์',\n  'วันเสาร์'\n];\n\nreturn daily.time.map((date, index) => {\n\n  const dayName = thaiDays[new Date(date).getDay()];\n\n  let weather = 'อากาศโปร่ง';\n\n  if (daily.precipitation_sum[index] >= 20) {\n    weather = 'ฝนตกหนัก';\n  } else if (daily.precipitation_sum[index] >= 5) {\n    weather = 'มีฝน';\n  } else if (daily.precipitation_sum[index] > 0) {\n    weather = 'ฝนเล็กน้อย';\n  }\n\n  return {\n    json: {\n      district: 'ทับสะแก',\n      province: 'ประจวบคีรีขันธ์',\n\n      forecastDate: new Date(date).toISOString(),\n\n      dayName,\n\n      weather,\n\n      maxTemp: daily.temperature_2m_max[index],\n      minTemp: daily.temperature_2m_min[index],\n\n      rainfall: daily.precipitation_sum[index],\n\n      source: 'open-meteo'\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        848
+      ],
+      "id": "5d83766b-f4e8-4ff1-a772-2050ba30800e",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1008,
+        848
+      ],
+      "id": "b067c542-473a-4ff5-add6-912eb8f591dd",
+      "name": "Schedule Trigger2"
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "11.53"
+            },
+            {
+              "name": "longitude",
+              "value": "99.62"
+            },
+            {
+              "name": "current",
+              "value": "temperature_2m,relative_humidity_2m,cloud_cover,rain,wind_speed_10m"
+            },
+            {
+              "name": "timezone",
+              "value": "Asia/Bangkok"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -672,
+        560
+      ],
+      "id": "f10ae4ac-e857-4b68-820d-5d66466e5f80",
+      "name": "Current Weather"
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "11.53"
+            },
+            {
+              "name": "longitude",
+              "value": "99.62"
+            },
+            {
+              "name": "daily",
+              "value": "temperature_2m_max,temperature_2m_min,precipitation_sum"
+            },
+            {
+              "name": "timezone",
+              "value": "Asia/Bangkok"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -704,
+        816
+      ],
+      "id": "004156b6-679b-4f90-8aff-fad2dc187181",
+      "name": "Daily Forecast"
+    },
+    {
+      "parameters": {
         "operation": "delete",
         "collection": "WeatherRecord"
       },
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1.3,
       "position": [
-        464,
-        400
+        1088,
+        448
       ],
-      "id": "a27ff2de-9fa2-4068-a360-f9fa87dcf662",
+      "id": "a633ba80-a64d-4fa3-8798-584226ad7002",
       "name": "Delete documents",
+      "credentials": {
+        "mongoDb": {
+          "id": "MbUVXiGJsrpRigCp",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "WeatherForecast",
+        "query": "[{\"$match\":{\"createdAt\":{\"$exists\":false}}},{\"$set\":{\"createdAt\":\"$$NOW\",\"updatedAt\":\"$$NOW\",\"forecastDate\":{\"$toDate\":\"$forecastDate\"}}},{\"$merge\":{\"into\":\"WeatherForecast\",\"whenMatched\":\"merge\"}}]"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        848
+      ],
+      "id": "047b69af-1f88-4d50-a2c8-1aaeb1dc938f",
+      "name": "Set createdAt1",
+      "credentials": {
+        "mongoDb": {
+          "id": "MbUVXiGJsrpRigCp",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "WeatherForecast",
+        "fields": "district,province,forecastDate,dayName,weather,maxTemp,minTemp,rainfall,source",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.3,
+      "position": [
+        -64,
+        848
+      ],
+      "id": "5c1bfb72-1fba-42fa-82a6-907b02937d58",
+      "name": "Insert documents1",
+      "credentials": {
+        "mongoDb": {
+          "id": "MbUVXiGJsrpRigCp",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "collection": "WeatherForecast"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        1136
+      ],
+      "id": "9b9c2bba-cc29-47da-a8fb-b0b2b1888f62",
+      "name": "Delete documents1",
+      "credentials": {
+        "mongoDb": {
+          "id": "MbUVXiGJsrpRigCp",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "WeatherRecord",
+        "query": "[{\"$match\":{\"createdAt\":{\"$exists\":false}}},{\"$set\":{\"createdAt\":\"$$NOW\",\"updatedAt\":\"$$NOW\",\"recordedAt\":\"$$NOW\"}},{\"$merge\":{\"into\":\"WeatherRecord\",\"whenMatched\":\"merge\"}}]"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        624
+      ],
+      "id": "77cdf6c9-e0ef-46c8-a7f1-a3227bcc8c11",
+      "name": "Set createdAt",
       "credentials": {
         "mongoDb": {
           "id": "MbUVXiGJsrpRigCp",
@@ -109,17 +352,6 @@
   ],
   "pinData": {},
   "connections": {
-    "Schedule Trigger": {
-      "main": [
-        [
-          {
-            "node": "HTTP Request",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "HTTP Request": {
       "main": [
         [
@@ -133,9 +365,102 @@
     },
     "Code in JavaScript": {
       "main": [
+        []
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Current Weather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger2": {
+      "main": [
+        [
+          {
+            "node": "Daily Forecast",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Current Weather": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Forecast": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
         [
           {
             "node": "Insert documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert documents": {
+      "main": [
+        [
+          {
+            "node": "Set createdAt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Insert documents1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert documents1": {
+      "main": [
+        [
+          {
+            "node": "Set createdAt1",
             "type": "main",
             "index": 0
           }
@@ -148,7 +473,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "652e21bc-1f73-4a10-873c-c41b809c2e39",
+  "versionId": "84cea582-4c06-4e52-840c-6ba391c150b8",
   "meta": {
     "instanceId": "cf81b7148d16d6e07a79b947e5ebd92571d983941495247927cd17f0aad7846b",
     "templateCredsSetupCompleted": true

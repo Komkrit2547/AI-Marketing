@@ -47,9 +47,59 @@ export const newsService = {
     };
   },
 
-  async getLatestWeather() {
-    return prisma.weatherRecord.findFirst({
-      orderBy: { id: 'desc' }
+  async getLatestWeather(date?: string, district?: string) {
+    let startOfDay, endOfDay;
+    let targetDate = new Date(); // Default to today
+    
+    if (date) {
+      const parsedDate = new Date(date);
+      if (!isNaN(parsedDate.getTime())) {
+        targetDate = parsedDate;
+        startOfDay = new Date(parsedDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        endOfDay = new Date(parsedDate);
+        endOfDay.setHours(23, 59, 59, 999);
+      }
+    } else {
+      startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+    }
+
+    // 1. Current Weather
+    let weatherWhere: any = {};
+    if (district) {
+      weatherWhere.district = district;
+    }
+    if (date) {
+      // Find the latest record within that day
+      weatherWhere.recordedAt = { gte: startOfDay, lte: endOfDay };
+    }
+
+    const current = await prisma.weatherRecord.findFirst({
+      where: weatherWhere,
+      orderBy: { id: 'desc' } // or recordedAt: 'desc' if it's indexed, but id is objectId so it works
     });
+
+    // 2. 7-Day Forecast
+    let forecastWhere: any = {
+      forecastDate: { gte: startOfDay }
+    };
+    if (district) {
+      forecastWhere.district = district;
+    }
+
+    const forecast = await prisma.weatherForecast.findMany({
+      where: forecastWhere,
+      orderBy: { forecastDate: 'asc' },
+      take: 7
+    });
+
+    return {
+      current,
+      forecast
+    };
   }
 };

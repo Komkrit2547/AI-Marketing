@@ -41,9 +41,9 @@ export default function HomePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-4xl font-bold text-[#FBBF24] mb-1">Dashboard Overview</h2>
-          <p className="text-[#fff]-500">AI-powered marketing insights for your local business.</p>
-        </div>
+          <h2 className="text-4xl font-bold text-[#FBBF24] mb-1">ภาพรวมแดชบอร์ด</h2>
+          <p className="text-[#fff]-500">ข้อมูลเชิงลึกด้านการตลาดสำหรับธุรกิจท้องถิ่นด้วย AI</p>
+        </div> 
         
         {/* Month Selector */}
         <div className="flex items-center gap-3">

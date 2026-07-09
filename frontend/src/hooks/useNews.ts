@@ -10,10 +10,10 @@ export function useNews(date?: string) {
   });
 }
 
-export function useWeather() {
+export function useWeather(date?: string, district?: string) {
   return useQuery({
-    queryKey: ['weather'],
-    queryFn: () => newsService.getLatestWeather(),
-    refetchInterval: 3000, // Poll every 3 seconds for near real-time
+    queryKey: ['weather', date, district],
+    queryFn: () => newsService.getLatestWeather(date, district),
+    refetchInterval: 60000, // Change to 60 seconds, as weather doesn't update every 3 seconds
   });
 }

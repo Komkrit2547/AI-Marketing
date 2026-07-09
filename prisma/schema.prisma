@@ -17,6 +17,8 @@ model AIInsight {
   rank           Int?
   relatedNewsId   String?   @db.ObjectId
   createdAt       DateTime?
+
+  @@index([createdAt(sort: Desc)])
 }
 
 model Campaign {
@@ -54,6 +56,7 @@ model CommunityPost {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  @@index([postedAt(sort: Desc)])
   @@map("community_posts")
 }
 
@@ -85,6 +88,34 @@ model WeatherRecord {
 
   createdAt   DateTime? @default(now())
   updatedAt   DateTime? @updatedAt
+
+  @@index([recordedAt(sort: Desc)])
+  @@index([district])
+}
+
+model WeatherForecast {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  district     String
+  province     String
+
+  forecastDate DateTime
+
+  dayName      String?
+
+  weather      String?
+
+  maxTemp      Float?
+  minTemp      Float?
+
+  rainfall     Float?
+
+  source       String?
+
+  createdAt    DateTime? @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([forecastDate(sort: Asc)])
 }
 
 model Business {

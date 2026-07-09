@@ -12,7 +12,7 @@ export default function NewsPage() {
     const dd = String(today.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
   });
-  const [selectedArea, setSelectedArea] = useState('');
+  const [selectedArea, setSelectedArea] = useState('ทับสะแก');
 
 
   return (
@@ -20,7 +20,7 @@ export default function NewsPage() {
 
       <div>
         <h2 className="text-4xl font-bold text-[#FBBF24] mb-2">
-          Local Trends
+          เทรนด์ในพื้นที่
         </h2>
 
         <p className="text-[#fff]-500 mt-1">
@@ -53,7 +53,7 @@ export default function NewsPage() {
             onChange={(e) => setSelectedArea(e.target.value)}
             className="bg-transparent outline-none text-[#434553]"
           >
-            <option value="Thap Sakae ">ทับสะแก</option>
+            <option value="ทับสะแก">ทับสะแก</option>
           </select>
         </div>
       </div>

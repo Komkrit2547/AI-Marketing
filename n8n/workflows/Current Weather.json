@@ -1,0 +1,173 @@
+{
+  "name": "Current Weather",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "WeatherRecord",
+        "fields": "district,province,weather,weatherMain,temperature,feelsLike,humidity,pressure,windSpeed,windDeg,cloudiness,rainfall,latitude,longitude,country,city,source,recordedAt",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        -160
+      ],
+      "id": "a128f094-ae68-4643-bf9f-14b8cfe27f5f",
+      "name": "Insert documents",
+      "credentials": {
+        "mongoDb": {
+          "id": "MbUVXiGJsrpRigCp",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const current = $json.current;\n\nlet weather = 'อากาศโปร่ง';\n\nif (current.rain > 0) {\n  weather = 'กำลังมีฝน';\n} else if (current.cloud_cover > 70) {\n  weather = 'เมฆมาก';\n} else if (current.cloud_cover > 30) {\n  weather = 'เมฆบางส่วน';\n}\n\nreturn [{\n  json: {\n    district: 'ทับสะแก',\n    province: 'ประจวบคีรีขันธ์',\n\n    weather,\n\n    temperature: current.temperature_2m,\n    humidity: current.relative_humidity_2m,\n\n    rainfall: current.rain,\n\n    windSpeed: current.wind_speed_10m,\n\n    source: 'open-meteo',\n\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        -176
+      ],
+      "id": "77478ba9-1b98-47f0-9523-022724838b36",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -512,
+        -208
+      ],
+      "id": "b3f96fa0-bba2-43f1-a05a-182392d6a8c7",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "11.53"
+            },
+            {
+              "name": "longitude",
+              "value": "99.62"
+            },
+            {
+              "name": "current",
+              "value": "temperature_2m,relative_humidity_2m,cloud_cover,rain,wind_speed_10m"
+            },
+            {
+              "name": "timezone",
+              "value": "Asia/Bangkok"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -176,
+        -208
+      ],
+      "id": "17930058-e77f-4ba2-af0c-a3c4c1e6dcc7",
+      "name": "Current Weather"
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "WeatherRecord",
+        "query": "[{\"$match\":{\"createdAt\":{\"$exists\":false}}},{\"$set\":{\"createdAt\":\"$$NOW\",\"updatedAt\":\"$$NOW\",\"recordedAt\":\"$$NOW\"}},{\"$merge\":{\"into\":\"WeatherRecord\",\"whenMatched\":\"merge\"}}]"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.3,
+      "position": [
+        704,
+        -144
+      ],
+      "id": "8862238c-a91d-4e19-adde-43b6a9ff2610",
+      "name": "Set createdAt",
+      "credentials": {
+        "mongoDb": {
+          "id": "MbUVXiGJsrpRigCp",
+          "name": "MongoDB account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Insert documents": {
+      "main": [
+        [
+          {
+            "node": "Set createdAt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Insert documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Current Weather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Current Weather": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "cdd8be47-d25e-4642-b65f-379fed7c9778",
+  "meta": {
+    "instanceId": "cf81b7148d16d6e07a79b947e5ebd92571d983941495247927cd17f0aad7846b"
+  },
+  "id": "0F9g7u3NbvsZnSfx",
+  "tags": []
+}

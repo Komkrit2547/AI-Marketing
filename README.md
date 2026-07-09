@@ -572,6 +572,9 @@ docker compose exec mongodb mongosh
 
 # ดู Prisma Studio
 docker compose up prisma-studio
+
+# docker สำหรับ rebuild image
+docker-compose build --no-cache
 ```
 
 ---

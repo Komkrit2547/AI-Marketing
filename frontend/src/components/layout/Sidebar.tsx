@@ -5,10 +5,10 @@ import { usePathname } from 'next/navigation';
 import { useDashboardStore } from '@/store/dashboard';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: 'dashboard' },
-  { href: '/news', label: 'Local Trends', icon: 'Whatshot' },
-  { href: '/insights', label: 'Local Shop', icon: 'Storefront' },
-  { href: '/campaigns', label: 'Campaign', icon: 'campaign' },
+  { href: '/', label: 'ภาพรวม', icon: 'dashboard' },
+  { href: '/news', label: 'เทรนด์พื้นที่', icon: 'Whatshot' },
+  { href: '/insights', label: 'ร้านค้าในพื้นที่', icon: 'Storefront' },
+  { href: '/campaigns', label: 'แคมเปญ', icon: 'campaign' },
 ];
 
 export default function Sidebar() {

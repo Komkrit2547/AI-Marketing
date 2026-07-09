@@ -17,7 +17,9 @@ export const newsController = {
 
   async getLatestWeather(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = await newsService.getLatestWeather();
+      const date = req.query.date as string;
+      const district = req.query.district as string;
+      const data = await newsService.getLatestWeather(date, district);
       res.json({
         success: true,
         data
